@@ -1,0 +1,29 @@
+name: fabdem-bias-correction
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - pip
+  - numpy=1.26
+  - pandas=2.2
+  - scikit-learn=1.5
+  - xgboost=2.1
+  - shap=0.46
+  - optuna=4.0
+  - rasterio=1.4
+  - rioxarray=0.17
+  - pyproj=3.6
+  - geopandas=1.0
+  - matplotlib=3.9
+  - psutil=6.0
+  - pyarrow=17.0
+  - pip:
+      - earthaccess>=0.10
+      - planetary-computer>=1.0
+      - pystac-client>=0.8
+      - stackstac>=0.5
+      - geemap>=0.34
+      - earthengine-api>=1.0
+      - pytorch-tabnet>=4.1
+      - torch>=2.4

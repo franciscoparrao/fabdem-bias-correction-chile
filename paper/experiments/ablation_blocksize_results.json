@@ -1,0 +1,190 @@
+{
+  "n_samples": 77501,
+  "baseline_rmse": 3.0537555867261847,
+  "baseline_mae": 1.422994759006039,
+  "best_params": {
+    "n_estimators": 1000,
+    "max_depth": 9,
+    "learning_rate": 0.011289111763110846,
+    "subsample": 0.9533188971118374,
+    "colsample_bytree": 0.6354986604850102,
+    "min_child_weight": 14,
+    "reg_lambda": 7.40970392425014,
+    "reg_alpha": 1.5969596058836053,
+    "gamma": 2.2017805740056464
+  },
+  "ablation": {
+    "all_33": {
+      "n_features": 33,
+      "dropped_groups": [],
+      "dropped_features": [],
+      "rmse_oof": 2.4850914887131053,
+      "mae_oof": 1.099446971002413,
+      "delta_pct_vs_raw": 18.62179476592371,
+      "elapsed_s": 140.44752883911133
+    },
+    "drop_optical": {
+      "n_features": 28,
+      "dropped_groups": [
+        "s2_optical"
+      ],
+      "dropped_features": [
+        "ndvi",
+        "ndwi",
+        "ndmi",
+        "bsi",
+        "ndbi"
+      ],
+      "rmse_oof": 2.609998223592878,
+      "mae_oof": 1.1375505407635693,
+      "delta_pct_vs_raw": 14.531528491087988,
+      "elapsed_s": 117.18784976005554
+    },
+    "drop_sar": {
+      "n_features": 30,
+      "dropped_groups": [
+        "s1_sar"
+      ],
+      "dropped_features": [
+        "s1_vh_db",
+        "s1_vv_db",
+        "s1_vv_vh_ratio"
+      ],
+      "rmse_oof": 2.483397134040656,
+      "mae_oof": 1.1003228702747812,
+      "delta_pct_vs_raw": 18.677279058111797,
+      "elapsed_s": 123.45776534080505
+    },
+    "drop_satellite": {
+      "n_features": 25,
+      "dropped_groups": [
+        "s2_optical",
+        "s1_sar"
+      ],
+      "dropped_features": [
+        "ndvi",
+        "ndwi",
+        "ndmi",
+        "bsi",
+        "ndbi",
+        "s1_vh_db",
+        "s1_vv_db",
+        "s1_vv_vh_ratio"
+      ],
+      "rmse_oof": 2.616181478712356,
+      "mae_oof": 1.1455291808817936,
+      "delta_pct_vs_raw": 14.329048137180331,
+      "elapsed_s": 127.14241361618042
+    },
+    "drop_hydro": {
+      "n_features": 25,
+      "dropped_groups": [
+        "hydro"
+      ],
+      "dropped_features": [
+        "hand",
+        "twi",
+        "flow_accumulation",
+        "flow_accumulation_mfd",
+        "flow_direction_d8",
+        "flow_direction_dinf",
+        "stream_network",
+        "valley_depth"
+      ],
+      "rmse_oof": 2.5485015920520064,
+      "mae_oof": 1.1208795124434425,
+      "delta_pct_vs_raw": 16.545331816022706,
+      "elapsed_s": 156.137779712677
+    },
+    "drop_3d_shape": {
+      "n_features": 30,
+      "dropped_groups": [
+        "shape_3d"
+      ],
+      "dropped_features": [
+        "openness_negative",
+        "openness_positive",
+        "svf"
+      ],
+      "rmse_oof": 2.4906230519018484,
+      "mae_oof": 1.103078056258528,
+      "delta_pct_vs_raw": 18.44065508294491,
+      "elapsed_s": 194.73632717132568
+    },
+    "drop_landform": {
+      "n_features": 30,
+      "dropped_groups": [
+        "landform"
+      ],
+      "dropped_features": [
+        "mrvbf",
+        "mrrtf",
+        "geomorphons"
+      ],
+      "rmse_oof": 2.488493619983832,
+      "mae_oof": 1.1004739879896963,
+      "delta_pct_vs_raw": 18.51038665960653,
+      "elapsed_s": 228.82265162467957
+    },
+    "terrain_only": {
+      "n_features": 14,
+      "dropped_groups": [
+        "hydro",
+        "s2_optical",
+        "s1_sar",
+        "landform"
+      ],
+      "dropped_features": [
+        "hand",
+        "twi",
+        "flow_accumulation",
+        "flow_accumulation_mfd",
+        "flow_direction_d8",
+        "flow_direction_dinf",
+        "stream_network",
+        "valley_depth",
+        "ndvi",
+        "ndwi",
+        "ndmi",
+        "bsi",
+        "ndbi",
+        "s1_vh_db",
+        "s1_vv_db",
+        "s1_vv_vh_ratio",
+        "mrvbf",
+        "mrrtf",
+        "geomorphons"
+      ],
+      "rmse_oof": 2.668525593908156,
+      "mae_oof": 1.1669515670567712,
+      "delta_pct_vs_raw": 12.614958266225209,
+      "elapsed_s": 72.86653447151184
+    }
+  },
+  "block_size": {
+    "5km": {
+      "block_size_m": 5000.0,
+      "n_blocks": 1671,
+      "rmse_oof": 2.4695853617705863,
+      "mae_oof": 1.095733446681202,
+      "delta_pct_vs_raw": 19.129567130218994,
+      "elapsed_s": 240.2067005634308
+    },
+    "10km": {
+      "block_size_m": 10000.0,
+      "n_blocks": 570,
+      "rmse_oof": 2.4850914887131053,
+      "mae_oof": 1.099446971002413,
+      "delta_pct_vs_raw": 18.62179476592371,
+      "elapsed_s": 244.6537504196167
+    },
+    "20km": {
+      "block_size_m": 20000.0,
+      "n_blocks": 166,
+      "rmse_oof": 2.503410731993309,
+      "mae_oof": 1.1081176839762448,
+      "delta_pct_vs_raw": 18.021902509980485,
+      "elapsed_s": 232.92396903038025
+    }
+  }
+}

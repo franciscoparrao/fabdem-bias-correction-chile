@@ -1,0 +1,56 @@
+{
+  "mediterranean_oof": {
+    "source": "Mediterranean, spatial-CV OOF",
+    "n": 77501,
+    "rmse_raw": {
+      "point": 3.053755593538897,
+      "ci_lo": 2.948185777705526,
+      "ci_hi": 3.1782122442424927
+    },
+    "rmse_corr": {
+      "point": 2.483180746286282,
+      "ci_lo": 2.3674350619650584,
+      "ci_hi": 2.619576508840586
+    },
+    "improvement_abs_m": 0.5705748472526149,
+    "improvement_pct": 18.684365194772987,
+    "diebold_mariano": {
+      "statistic": 31.20146335581616,
+      "p_value": 0.0,
+      "n": 77501
+    },
+    "sign_test": {
+      "n_better": 50025,
+      "n_total": 77501,
+      "pct_better": 64.54755422510678,
+      "p_value": 0.0
+    }
+  },
+  "humid_temperate_ood": {
+    "source": "Humid temperate, M-M model applied (true OOD)",
+    "n": 57849,
+    "rmse_raw": {
+      "point": 4.9459629432823276,
+      "ci_lo": 4.843973965268606,
+      "ci_hi": 5.055537173564999
+    },
+    "rmse_corr": {
+      "point": 3.84972813183878,
+      "ci_lo": 3.757635668119402,
+      "ci_hi": 3.959626833403502
+    },
+    "improvement_abs_m": 1.0962348114435474,
+    "improvement_pct": 22.164234225257754,
+    "diebold_mariano": {
+      "statistic": 40.146076752748854,
+      "p_value": 0.0,
+      "n": 57849
+    },
+    "sign_test": {
+      "n_better": 33080,
+      "n_total": 57849,
+      "pct_better": 57.18335666995108,
+      "p_value": 8.870189489268101e-263
+    }
+  }
+}

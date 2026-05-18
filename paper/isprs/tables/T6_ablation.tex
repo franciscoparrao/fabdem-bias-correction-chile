@@ -1,0 +1,20 @@
+\begin{table}[t]
+\centering
+\caption{Feature-group ablation on the Mediterranean dataset (spatial-CV out-of-fold, $K=5$, \SI{10}{\kilo\meter} blocks, $n = 77{,}501$). Hyperparameters are fixed at the Optuna-selected values from Table~\ref{tab:hyperparams}; only the feature subset varies. $\Delta\%$ follows the same sign convention as Table~\ref{tab:stratification}: negative values indicate RMSE reduction (improvement). Sentinel-1 SAR backscatter adds no measurable value in the Mediterranean regime; Sentinel-2 optical and hydrological features are the largest contributors. A terrain-only variant (14 features, no satellite or hydrology) recovers $\sim$68\% of the full-stack RMSE gain and represents a viable operational fall-back for settings without satellite access.}
+\label{tab:ablation}
+\footnotesize
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Configuration} & \textbf{n feat} & \textbf{RMSE (m)} & \textbf{MAE (m)} & \textbf{$\Delta$\% vs raw} \\
+\midrule
+All features (baseline)                                & 33 & 2.485 & 1.099 & $-18.6\%$ \\
+$-$ Sentinel-1 SAR                                     & 30 & 2.483 & 1.100 & $-18.7\%$ \\
+$-$ 3D shape (openness, SVF)                           & 30 & 2.491 & 1.103 & $-18.4\%$ \\
+$-$ Landform (MRVBF, MRRTF, geomorphons)               & 30 & 2.489 & 1.101 & $-18.5\%$ \\
+$-$ Hydrology (HAND, TWI, flow, valley, stream)        & 25 & 2.549 & 1.121 & $-16.6\%$ \\
+$-$ Sentinel-2 optical                                 & 28 & 2.610 & 1.138 & $-14.5\%$ \\
+$-$ All satellite (S1 $+$ S2)                          & 25 & 2.616 & 1.146 & $-14.3\%$ \\
+Terrain only (no satellite, no hydrology)              & 14 & 2.669 & 1.167 & $-12.6\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,1 @@
+{"elapsed_s": 663.86, "peak_ram_gb": 0.505, "cmd": ["python3", "steps/07_train.py"]}

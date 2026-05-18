@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\caption{XGBoost against tabular deep-learning baselines on the identical spatial-CV folds (\SI{10}{\kilo\meter} blocks, $K = 5$, $n = 77{,}501$, 33 features). MLP: three hidden layers (256-256-128), ReLU, dropout 0.2, AdamW lr~$=10^{-3}$, batch 2048. TabNet \citep{Arik2021TabNet}: $n_d = n_a = 32$, $n_{\text{steps}} = 4$, $\gamma = 1.3$, Adam lr~$=2 \times 10^{-2}$, batch 4096. Both DL baselines use early stopping (patience 20) on a 20\% random validation split of each training fold. $\Delta\%$ follows the sign convention used throughout (negative = improvement). XGBoost remains the most accurate model and is substantially cheaper to train and to interpret via SHAP.}
+\label{tab:dl_baseline}
+\footnotesize
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Model} & \textbf{RMSE (m)} & \textbf{MAE (m)} & \textbf{$\Delta$\% vs raw} \\
+\midrule
+FABDEM raw (no correction)   & 3.054 & 1.423 & --- \\
+MLP (3 hidden layers)        & 2.578 & 1.148 & $-15.6\%$ \\
+TabNet                       & 2.606 & 1.158 & $-14.7\%$ \\
+\textbf{XGBoost (this work)} & \textbf{2.483} & \textbf{1.099} & $\mathbf{-18.7\%}$ \\
+\bottomrule
+\end{tabular}
+\end{table}

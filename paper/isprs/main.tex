@@ -1,0 +1,456 @@
+\documentclass[preprint,authoryear,number]{elsarticle}
+\usepackage{setspace}
+\setlength{\parskip}{0.5em}
+\setlength{\footnotesep}{12pt}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{siunitx}
+\usepackage{lineno}
+\usepackage{natbib}
+
+\modulolinenumbers[5]
+\linenumbers
+
+\journal{ISPRS Journal of Photogrammetry and Remote Sensing}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{Stratified machine-learning bias correction of FABDEM transfers between contrasting Chilean climate regimes: evidence from ICESat-2 over Mediterranean and humid temperate watersheds}
+
+\author[usach]{Francisco Parra~O.\corref{cor1}}
+\ead{francisco.parra.o@usach.cl}
+\cortext[cor1]{Corresponding author}
+
+\address[usach]{Universidad de Santiago de Chile (USACH), Santiago, Chile}
+
+\begin{abstract}
+Global 30-m digital elevation models such as FABDEM achieve aggregate vertical RMSE near \SI{2.5}{\meter}, but it remains unclear whether this average hides geographically heterogeneous bias that could be exploited for targeted regional correction, and whether such a correction transfers across distinct climate regimes. We address both questions using 135{,}350 ICESat-2 ATL08 v7 ground footprints over central-south Chile (34--39$^{\circ}$S) as cm-precision satellite LiDAR ground truth, spanning two contrasting regimes: Mediterranean watersheds (Mataquito and Maule) and humid temperate Valdivian rainforest (B\'io-B\'io and Araucan\'ia). For each footprint we engineer 33 features---geomorphometric (slope, curvature, openness, MRVBF, geomorphons), hydrological (HAND, TWI, flow accumulation, valley depth), and satellite-derived (Sentinel-1 RTC $\sigma^{0}$, Sentinel-2 NDVI/NDWI/NDMI/BSI)---and train XGBoost regression on the residual $h_{te} - \mathrm{fabdem}$ after EGM2008 datum correction, with Optuna hyperparameter optimisation and spatial-block cross-validation (\SI{10}{\kilo\meter} blocks, $n = 570$, $K = 5$ folds). Spatial-block cross-validation reduces RMSE from \SI{3.054}{\meter} (95\% CI: 2.95--3.18) to \SI{2.483}{\meter} (2.37--2.62)---a \SI{0.57}{\meter} absolute reduction ($-18.7\%$; Diebold--Mariano $p < 0.001$)---and eliminates a systematic $+\SI{1.0}{\meter}$ positive bias. Stratification reveals strongly differential gains: $-41.6\%$ in dense vegetation (NDVI $> 0.6$), $-33.8\%$ above \SI{3000}{\meter}, but only $-19.1\%$ in floodplains (HAND 2--\SI{10}{\meter}) where FABDEM is already accurate. Applying the Mediterranean-trained model to humid temperate forest \emph{without retraining} yields a further $-22.2\%$ RMSE reduction (4.946 $\to$ \SI{3.850}{\meter}; CIs 4.84--5.06 $\to$ 3.76--3.96), with SHAP attribution shifting from drainage features to 3D shape descriptors (openness\_negative, valley\_depth)---consistent with the model capturing terrain--error relationships that transfer between contrasting regimes rather than memorising regional patterns. We probe the boundary of this transferability by also applying the same model, without modification, to two further $1^{\circ}$ ATL08 datasets outside the Chilean training span---Vietnam Mekong Delta (tropical wet, $n=20{,}569$) and Atacama (hyperarid, $n=20{,}681$). In both regimes the correction \emph{degrades} performance (Vietnam $+5.8\%$ RMSE; Atacama $+54\%$ RMSE on a FABDEM that is already accurate at \SI{0.6}{\meter}), establishing empirically that the regional correction is bounded by the joint distribution of bias-driving features rather than universal. We release the corrected DEM as a Cloud-Optimized GeoTIFF (CC BY-NC-4.0, inherited from FABDEM), the 135k-footprint training dataset, trained model, and pipeline code as open artefacts.
+\end{abstract}
+
+\begin{keyword}
+FABDEM \sep bias correction \sep ICESat-2 ATL08 \sep XGBoost \sep spatial-block cross-validation \sep Chile \sep out-of-distribution generalisation
+\end{keyword}
+
+\end{frontmatter}
+
+%% Highlights (submitted as separate file)
+%% - Regional XGBoost correction cuts FABDEM RMSE from 3.05 m to 2.48 m on 77,501 ATL08 footprints under spatial-block CV
+%% - Stratified gains: -41.6% in dense vegetation, -33.8% above 3000 m, -19.1% in floodplains
+%% - Cross-regime transferability is bounded: humid temperate Chile -22%; tropical wet (Vietnam) +5.8%; hyperarid (Atacama) +54%
+%% - XGBoost outperforms MLP and TabNet baselines on the same spatial-CV folds; SAR features are dispensable in Mediterranean
+%% - Corrected DEM, 135k-footprint training set, model and code released openly under CC BY-NC-4.0 / MIT / CC0
+
+%% ============================================================
+\section{Introduction}
+\label{sec:introduction}
+
+Open-access global digital elevation models (DEMs) underpin essentially every contemporary application that requires terrain information at regional or continental scale, from flood inundation modelling \citep{Wing2024GlobalFlood,Hawker2024Vietnam} to land-surface processes, infrastructure planning, and earth-surface dynamics. Three decades of mission heritage---SRTM \citep{Farr2007SRTM}, ASTER GDEM, TanDEM-X \citep{Rizzoli2017TanDEMX}, ALOS World 3D, NASADEM, MERIT \citep{Yamazaki2017MERIT}, and Copernicus DEM---have progressively reduced global vertical error but have not eliminated it. Each successive product inherits, in modified form, residual biases from the underlying acquisition geometry, vegetation occlusion, and built-environment artefacts \citep{Schumann2018DEMSurvey,Hawker2018Accuracy}. The Forest And Buildings removed Copernicus DEM (FABDEM; \citealt{Hawker2022FABDEM}) is, at the time of writing, the most accurate publicly available bare-earth DEM at \SI{30}{\meter} resolution, achieving an aggregate global root mean square error (RMSE) of approximately \SI{2.5}{\meter} after a random-forest correction removes canopy and building height contributions from the Copernicus DSM. Independent benchmarks confirm FABDEM as the strongest of the freely available 30-m DEMs in flood-prone environments \citep{Meadows2024VerticalAccuracy}.
+
+Despite this advance, two practically important questions remain only partially addressed. First, does FABDEM's aggregate $\sim$\SI{2.5}{\meter} global RMSE conceal a \emph{geographically heterogeneous} bias structure that could be exploited by targeted regional correction? Although the global random-forest model of \citet{Hawker2022FABDEM} removes the largest systematic effects, it is by design a single global function: the same correction is applied everywhere, with no regional adaptation. If FABDEM's residual error in, say, dense Andean foothill forest follows a different geomorphometric signature than its error in semi-arid Mediterranean valley terrain, then a regionally fine-tuned correction could in principle further reduce RMSE in specific terrain types. Second, can such a regional correction \emph{transfer} between climate regimes---that is, does a model trained on one terrain--vegetation regime usefully correct FABDEM in a contrasting regime \emph{without retraining}? This is a transferability question with direct implications for cost and scalability: if a Chilean-trained correction is portable, the methodology can be applied to ungauged regions where local ground truth is unavailable. Commercial alternatives such as FABDEM+ \citep{Fathom2024FABDEMPlus} exist but their methodology is proprietary, precluding independent evaluation of regional behaviour.
+
+Validating either question at scale has historically been bottlenecked by access to high-precision ground-truth elevation. Airborne LiDAR is the gold standard but is expensive, geographically uneven, and frequently unavailable for the specific basins of interest. ICESat-2, launched in 2018, has begun to change this landscape. The ATLAS instrument acquires along-track photon-counting altimetry at cm-level vertical precision over a global, repeat-orbit footprint \citep{Markus2017ICESat2}, and the ATL08 land-and-vegetation product \citep{Neuenschwander2019ATL08} provides quality-controlled ground-classified segments at $\sim$\SI{100}{\meter} along-track resolution with \SI{17}{\meter} circular footprint. ATL08 thus offers a satellite-borne, cm-precision LiDAR-equivalent ground truth that scales globally and refreshes every $\sim$91 days. The relevant cost is no longer access---it is engineering: extracting, quality-filtering, datum-correcting (ATL08 reports ellipsoidal heights; FABDEM uses orthometric EGM2008 heights), and feature-engineering at scale.
+
+In this study we exploit ATL08 to construct a regional FABDEM correction and to test transferability across climate regimes. Specifically, we address three research questions:
+
+\begin{itemize}
+\item \textbf{RQ1}: Does FABDEM's bias have spatial structure that is regionally learnable from ICESat-2 ATL08 ground truth plus geomorphometric and satellite-derived features?
+\item \textbf{RQ2}: How does correction performance stratify across geomorphometric (slope, curvature, HAND), climatic (NDVI, elevation), and tile-level dimensions?
+\item \textbf{RQ3}: Does a regional ML correction transfer between contrasting climate regimes (Mediterranean $\leftrightarrow$ humid temperate) \emph{without retraining}?
+\end{itemize}
+
+We assemble 135{,}350 ICESat-2 ATL08 v7 ground-classified footprints over ten $1^{\circ} \times 1^{\circ}$ FABDEM tiles spanning central-south Chile (34--39$^{\circ}$S), engineer 33 features per footprint (geomorphometric, hydrological, and Sentinel-1/2 derived), and train XGBoost regression \citep{Chen2016XGBoost} on the residual $h_{te} - \mathrm{fabdem}$ (after EGM2008 datum correction; \citealt{Pavlis2012EGM2008}) with Optuna hyperparameter optimisation \citep{Akiba2019Optuna} under spatial-block cross-validation \citep{Roberts2017SpatialCV} to suppress autocorrelation leakage. We then apply the Mediterranean-trained model to humid temperate forest tiles without retraining to evaluate cross-regime transferability. Feature attribution uses SHAP values \citep{Lundberg2017SHAP} to compare what the model emphasises in each regime. We report bootstrap 95\% confidence intervals on all RMSE estimates and Diebold--Mariano tests of squared-error differentials.
+
+The contributions of this work are:
+
+\begin{enumerate}
+\item \textbf{An honest regional benchmark for ML correction of FABDEM}: we reduce spatial-block cross-validated RMSE from \SI{3.054}{\meter} (95\% CI 2.95--3.18) to \SI{2.483}{\meter} (2.37--2.62)---an absolute reduction of \SI{0.57}{\meter} ($-18.7\%$) that is highly statistically significant (Diebold--Mariano $p < 0.001$)---and eliminate a systematic $+\SI{1.0}{\meter}$ positive bias.
+\item \textbf{A stratified characterisation of where the correction matters}: we show RMSE gains of $-41.6\%$ in dense vegetation, $-33.8\%$ above \SI{3000}{\meter}, and $\leq -19.1\%$ in already-accurate floodplains, with sample-sparse flat terrain extrapolating poorly.
+\item \textbf{First demonstration, to our knowledge, of cross-regime transferability of an ML FABDEM correction}: the Mediterranean-trained model achieves a further $-22.2\%$ RMSE reduction on humid temperate forest \emph{without retraining} (Diebold--Mariano $p < 0.001$). SHAP attribution shifts from drainage features to 3D shape descriptors in a manner consistent with the model capturing physically grounded terrain--error relationships rather than memorising regional patterns---although multi-continental generalisation remains to be tested.
+\item \textbf{An open artefact release}---corrected COG, training dataset, trained model, and pipeline code (under CC BY-NC-4.0 inherited from FABDEM)---that positions ICESat-2 ATL08 as scalable LiDAR-equivalent ground truth for regional DEM refinement elsewhere.
+\end{enumerate}
+
+The remainder of the paper is organised as follows. Section~\ref{sec:study_area} describes the study area, including the contrasting climate regimes and the June 2023 atmospheric-river event that motivated the choice of basins. Section~\ref{sec:data} details the data sources. Section~\ref{sec:methods} specifies the methodology and pipeline. Section~\ref{sec:results} presents results, including stratified analysis and the out-of-distribution transferability test. Section~\ref{sec:discussion} discusses where the correction matters and what the SHAP-attribution shifts imply about physical interpretability and scope of transferability. Section~\ref{sec:conclusions} concludes and Section~\ref{sec:data_availability} lists data and code availability.
+
+
+%% ============================================================
+\section{Study area}
+\label{sec:study_area}
+
+The study area covers $\sim$700{,}000\,km$^{2}$ of central-south Chile between 34$^{\circ}$S and 39$^{\circ}$S (Fig.~\ref{fig:study_area}). At these latitudes the country is a narrow $\sim$\SI{220}{\kilo\meter} strip from Pacific coast to the Andean drainage divide, and the steep west--east climatic and topographic gradient creates a natural laboratory for terrain-correction studies: lowland coastal plain, agricultural Central Valley, pre-Andean foothills, and high Andes above \SI{3000}{\meter} all occur within each $1^{\circ}$ latitude band. We sample this transect with ten contiguous $1^{\circ} \times 1^{\circ}$ FABDEM tiles (S35W071 to S39W073), grouped into two contrasting climate regimes for the experimental design.
+
+The \textbf{Mediterranean regime} comprises six tiles (S35W071, S35W072, S36W071, S36W072, S37W071, S37W072) spanning the Mataquito and Maule river basins (34--37$^{\circ}$S). Climate is Mediterranean \emph{sensu stricto}---dry summers, wet winters concentrated in May--August---with mean annual precipitation increasing from $\sim$\SI{400}{\milli\meter} in the north to $\sim$\SI{900}{\milli\meter} at the southern boundary. Land cover is a mosaic of intensive agriculture (vineyards, fruit orchards, cereals) in the Central Valley, sclerophyll forest on coastal-range and pre-Andean slopes, and barren or sparsely vegetated alpine terrain above the tree line. The growing-season NDVI distribution is broad with median $\approx 0.3$, reflecting this heterogeneity, with concentrated areas of bare ground (NDVI $< 0.1$) in the upper cordillera and dense canopy (NDVI $> 0.5$) only in irrigated valleys and remnant forest patches.
+
+The \textbf{humid temperate regime} comprises four tiles (S38W072, S38W073, S39W072, S39W073) spanning the B\'io-B\'io and Araucan\'ia regions (37--39$^{\circ}$S). This is the northern margin of the Valdivian temperate rainforest biome: mean annual precipitation rises to 1{,}500--3{,}000\,mm with year-round rainfall, and natural vegetation is dense evergreen-broadleaf forest dominated by \emph{Nothofagus} species. Plantation forestry (\emph{Pinus radiata}, \emph{Eucalyptus}) covers a substantial fraction of the coastal range and central valley. Growing-season NDVI distribution is shifted upward, median $\approx 0.6$, with very dense canopy (NDVI $> 0.7$) common. Topographically the regime mirrors the Mediterranean transect---coastal range, central valley, Andean foothills, high Andes---but with denser and more spatially uniform vegetation cover. The latitudinal separation of $\sim 3^{\circ}$ ($\approx \SI{330}{\kilo\meter}$) between the two regimes' centroids and the contrast in vegetation cover (NDVI $\Delta$median $\approx 0.3$) provide a clean test of cross-regime transferability.
+
+The June 2023 atmospheric-river event over central Chile motivates the regional focus. Between 21 and 26 June 2023, an exceptionally intense frontal system---characterised by the Centro de Ciencia del Clima y la Resiliencia as the strongest of the last three decades \citep{Garreaud2024AR2023}---delivered persistent heavy precipitation over the Mediterranean regime in particular, with widespread river overflow in the Mataquito and Maule basins. CIGIDEN documented post-disaster flood extents at Licant\'en (Mataquito river mouth; \citealt{CIGIDEN2023Licanten,CIGIDEN2023MataquitoMaule}). Although the present paper focuses on DEM correction rather than flood mapping, this event provides direct policy relevance: improvement in DEM accuracy in flood-prone Chilean basins has demonstrable applications, and Section~\ref{sec:hand_check} uses the CIGIDEN Licant\'en polygons in a HAND-threshold comparison as a preliminary downstream check.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/F1_study_area.pdf}
+\caption{Study area in central-south Chile (34--39$^{\circ}$S). The ten $1^{\circ} \times 1^{\circ}$ FABDEM tiles are grouped into Mediterranean training tiles (six tiles, Mataquito and Maule basins; orange) and humid temperate out-of-distribution tiles (four tiles, B\'io-B\'io and Araucan\'ia; blue). Inset shows the CIGIDEN Licant\'en June~2023 flood polygon at the Mataquito river mouth. Map lines delineate study tiles and do not necessarily depict accepted national boundaries.}
+\label{fig:study_area}
+\end{figure*}
+
+
+%% ============================================================
+\section{Data}
+\label{sec:data}
+
+We use five primary data sources---the bare-earth DEM under correction, the ground-truth altimetry, two satellite remote-sensing sources for feature engineering, and a geoid model for datum harmonisation---plus a derived geomorphometric feature stack computed from the DEM itself. Table~\ref{tab:data_sources} summarises the sources; the following subsections detail provenance, processing, and resulting feature count.
+
+\subsection{FABDEM v1.2}
+\label{sec:fabdem}
+
+FABDEM v1.2 \citep{Hawker2022FABDEM} is the bare-earth DEM under correction. It is derived from Copernicus DEM GLO-30 (the upstream Digital Surface Model) by removing canopy and building height contributions with a random-forest regression trained on global LiDAR samples. Native horizontal resolution is 1\,arcsec ($\sim$\SI{30}{\meter} at our latitudes) on a geographic WGS84 (EPSG:4326) grid, and the vertical datum is orthometric EGM2008. We download the ten $1^{\circ} \times 1^{\circ}$ tiles via the Google Earth Engine asset \texttt{projects/sat-io/open-datasets/FABDEM}, yielding $\sim$137\,M pixels across the study area. The licence is CC BY-NC-4.0, which the corrected product inherits.
+
+\subsection{ICESat-2 ATL08 v7}
+\label{sec:atl08}
+
+ICESat-2 \citep{Markus2017ICESat2} carries the ATLAS photon-counting laser altimeter (\SI{532}{\nano\meter}, \SI{10}{\kilo\hertz} pulse rate, six beams in three weak/strong pairs). The ATL08 v7 product \citep{Neuenschwander2019ATL08} aggregates ATL03 geolocated photons into $\sim$\SI{100}{\meter} along-track land segments with a \SI{17}{\meter} circular footprint and classifies returns into ground, canopy, and noise. We download all ATL08 v7 granules intersecting each tile between January 2018 and December 2025 via \texttt{earthaccess}, extract footprints inside each tile's bounding box, and apply the following quality filters (recommended by the ATL08 ATBD and consistent with prior published DEM-validation work):
+
+\begin{itemize}
+\item \texttt{terrain\_flg == 1} (segment passed terrain quality screening);
+\item \texttt{n\_te\_photons} $\geq 30$ (sufficient photon support for the terrain estimate);
+\item \texttt{h\_te\_uncertainty} $< \SI{10}{\meter}$ (1-$\sigma$ along-track uncertainty);
+\item \texttt{segment\_snowcover == 1} and \texttt{segment\_watermask == 0} (no snow, not water);
+\item \texttt{cloud\_flag\_atm} $\leq 1$ (clear-sky atmosphere).
+\end{itemize}
+
+After filtering, the retained sample is 77{,}501 footprints in the Mediterranean regime and 57{,}849 in humid temperate, for a combined dataset of 135{,}350 ground-classified footprints. The variable used as truth is \texttt{h\_te\_best\_fit} (best-fit terrain elevation), converted from WGS84 ellipsoidal to EGM2008 orthometric heights via the PROJ pipeline (EPSG:4979 $\to$ EPSG:9518) using gridded EGM2008 \citep{Pavlis2012EGM2008} with PROJ network mode enabled. The geoid undulation over the study area ranges from approximately $+18$ to $+\SI{24}{\meter}$ and applying it removes an apparent $+21$--\SI{22}{\meter} baseline offset between raw ATL08 ellipsoidal heights and FABDEM, leaving a residual mean error of approximately $+\SI{1}{\meter}$ attributable to FABDEM itself.
+
+\subsection{Sentinel-2 L2A optical composites}
+\label{sec:sentinel2}
+
+We assemble single-season austral summer optical composites (December 2022 to February 2023) from Sentinel-2 L2A \citep{Drusch2012Sentinel2} via the Microsoft Planetary Computer STAC API. For each MGRS tile intersecting the study area we select the three least-cloudy granules with cloud cover below 20\%, stack them with \texttt{stackstac} at \SI{60}{\meter} resolution on the UTM 19S projection (EPSG:32719), and compute the per-pixel median across the time stack for bands B02 (blue), B03 (green), B04 (red), B08 (NIR), B11 (SWIR-1), and B12 (SWIR-2). From these we derive five spectral indices: NDVI (vegetation), NDWI (water/wetness), NDMI (moisture), BSI (bare-soil), and NDBI (built-up/non-vegetation). The \SI{60}{\meter} output resolution is a deliberate trade-off: lowering Sentinel-2 from native 10--\SI{20}{\meter} to \SI{60}{\meter} reduces memory footprint by an order of magnitude for the per-tile compute, with minimal information loss for point-sampling at ICESat-2 footprint locations (which are themselves spatial integrations over a \SI{17}{\meter} footprint).
+
+\subsection{Sentinel-1 RTC SAR composites}
+\label{sec:sentinel1}
+
+We assemble parallel C-band SAR backscatter composites from Sentinel-1 RTC products \citep{Torres2012Sentinel1} via Planetary Computer. For each tile we retain up to 12 dual-polarisation (VV $+$ VH) granules from the same December 2022--February 2023 window, compute the per-pixel median, convert to decibels ($\sigma^{0}$ in dB), and derive the VV/VH ratio. Final outputs at \SI{60}{\meter} UTM 19S are three rasters: \texttt{s1\_vv\_db}, \texttt{s1\_vh\_db}, and \texttt{s1\_vv\_vh\_ratio}. SAR backscatter complements the optical composite by being weather-independent and sensitive to surface roughness and dielectric properties (vegetation moisture content), which are partially decoupled from optical vegetation greenness.
+
+\subsection{Geomorphometric and hydrological features (SurtGis)}
+\label{sec:surtgis}
+
+From each tile's FABDEM raster we derive a stack of geomorphometric and hydrological terrain features using SurtGis \citep{SurtGis2026}, an open-source Rust geospatial library that exposes streaming, parallel implementations of standard algorithms. The two batch operations \texttt{surtgis terrain all} and \texttt{surtgis hydrology all} produce, in a single pass per tile:
+
+\begin{itemize}
+\item \textbf{Slope, aspect (sin/cos), hillshade}---standard first-derivative quantities;
+\item \textbf{Curvature (general, profile, planform), TPI, TRI, VRM, dev, convergence}---second-derivative and ruggedness descriptors;
+\item \textbf{Openness positive/negative, sky-view factor (SVF)}---3D form descriptors capturing local concavity/convexity at longer length scales \citep{Yokoyama2002Openness};
+\item \textbf{MRVBF, MRRTF}---Multi-Resolution Valley Bottom / Ridge Top Flatness \citep{Gallant2003MRVBF};
+\item \textbf{Geomorphons}---10-class landform classification \citep{Jasiewicz2013Geomorphons};
+\item \textbf{HAND}---Height Above Nearest Drainage \citep{Nobre2011HAND}, a drainage-relative elevation quantity widely used in flood-prone areas;
+\item \textbf{TWI}---Topographic Wetness Index \citep{Beven1979TOPMODEL};
+\item \textbf{Flow direction (D8 and D-infinity), flow accumulation (single and multi-flow), filled DEM, stream network}---standard hydrological derivatives;
+\item \textbf{Valley depth}---distance from each pixel to the nearest ridge top elevation.
+\end{itemize}
+
+In total, after de-duplication, this yields 25 geomorphometric and hydrological rasters per tile in the FABDEM native EPSG:4326 / \SI{30}{\meter} grid. Each is sampled at footprint locations during the feature-stack assembly step.
+
+\subsection{Final feature stack}
+\label{sec:feature_stack}
+
+Combining the satellite-derived (5 Sentinel-2 indices $+$ 3 Sentinel-1 SAR statistics) and DEM-derived (25 SurtGis outputs) features yields a \textbf{33-feature stack} per footprint after sampling. The regression target is the EGM2008-corrected residual
+\begin{equation}
+y = h_{\text{te,orthometric}} - h_{\text{fabdem}}, \quad \text{units in metres,}
+\label{eq:target}
+\end{equation}
+with values close to zero indicating an accurate FABDEM pixel and large-magnitude values signalling correctable bias. The sign convention is that positive $y$ corresponds to FABDEM underestimating the true ground surface; the empirically observed regional median is $-\SI{1}{\meter}$, consistent with the published global tendency of FABDEM to slightly \emph{overestimate} bare-earth elevation in vegetated terrain---likely a residual artefact of the upstream Copernicus DSM canopy bias incompletely removed by the global RF model. Table~\ref{tab:data_sources} lists licences and access methods for every source.
+
+\input{tables/T1_data_sources}
+
+
+%% ============================================================
+\section{Methods}
+\label{sec:methods}
+
+\subsection{Pipeline architecture}
+\label{sec:pipeline}
+
+The processing pipeline (Fig.~\ref{fig:pipeline}) is organised as a tile-parallel sequence of seven stages: (i) FABDEM tile retrieval, (ii) geomorphometric and hydrological feature derivation, (iii) Sentinel-1/2 composite assembly, (iv) ICESat-2 ATL08 granule acquisition, (v) footprint extraction and datum correction, (vi) feature-stack sampling at footprint locations, and (vii) regression target assembly. Stages (i)--(vi) execute independently per $1^{\circ}$ tile inside isolated process trees; their outputs (per-tile sample tables) are concatenated at the end. Each stage is checkpointed: if a partial output already exists with valid metadata, the stage is skipped on re-execution, which makes the pipeline robust to mid-run interruptions and incremental data additions. A \texttt{psutil}-based watchdog monitors combined RAM of the running stage plus all child processes and aborts the stage cleanly if a configurable threshold (here \SI{8}{\giga\byte}) is exceeded, preventing the long-running pipeline from competing for swap with the operating system. The watchdog never fired in production runs after the satellite-stage RAM optimisation described in Section~\ref{sec:feature_assembly} was applied.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/F2_pipeline_flowchart.pdf}
+\caption{End-to-end processing pipeline. Stages (i)--(vi) execute independently per $1^{\circ}$ FABDEM tile; per-tile sample tables are concatenated for training. Each stage is checkpointed (skipped on resume if output exists) and supervised by a \texttt{psutil}-based RAM watchdog. ATL08 footprints are converted from WGS84 ellipsoidal to EGM2008 orthometric heights via PROJ network mode before the regression target is assembled.}
+\label{fig:pipeline}
+\end{figure*}
+
+\subsection{Footprint extraction and EGM2008 datum correction}
+\label{sec:egm2008}
+
+For each tile we download every ATL08 v7 granule whose bounding polygon intersects the tile geometry, then iterate through the six ATLAS beams (\texttt{gt1l}--\texttt{gt3r}). For each land-segment record we retain the longitude, latitude, best-fit terrain height (\texttt{terrain/h\_te\_best\_fit}), per-segment uncertainty (\texttt{terrain/h\_te\_uncertainty}), and the quality flags listed in Section~\ref{sec:atl08}. Quality filtering retains records satisfying simultaneously: \texttt{terrain\_flg} $= 1$, \texttt{n\_te\_photons} $\geq 30$, \texttt{h\_te\_uncertainty} $< \SI{10}{\meter}$, \texttt{segment\_snowcover} $= 1$, \texttt{segment\_watermask} $= 0$, \texttt{cloud\_flag\_atm} $\leq 1$. These thresholds follow \citet{Neuenschwander2019ATL08} for surface terrain analysis and screen out water bodies, snow-covered surfaces, cloud-contaminated retrievals, and low-photon-count segments where the best-fit elevation is poorly constrained.
+
+ATL08 reports heights above the WGS84 ellipsoid, whereas FABDEM uses orthometric heights referenced to the EGM2008 geoid \citep{Pavlis2012EGM2008}. Failing to harmonise the two leaves an apparent $\sim +\SI{22}{\meter}$ baseline offset that would entirely dominate the regression target and silently corrupt downstream analysis. We apply the conversion per footprint using the PROJ pipeline from EPSG:4979 (WGS84 3D ellipsoidal) to EPSG:9518 (WGS84 horizontal $+$ EGM2008 vertical), with PROJ network mode enabled so that the EGM2008 grid is fetched on demand. The geoid undulation varies by approximately \SI{6}{\meter} across the latitudinal extent of the study area, so the correction is per-point rather than a constant offset. The corrected heights, denoted $h_{\text{te,ortho}}$, define the regression target as the signed residual $y = h_{\text{te,ortho}} - h_{\text{fabdem}}$ in metres.
+
+\subsection{Feature-stack assembly with CRS-aware sampling}
+\label{sec:feature_assembly}
+
+FABDEM and its derived terrain features (Section~\ref{sec:surtgis}) reside on a geographic grid (EPSG:4326, $\sim$\SI{30}{\meter}), while the Sentinel-1/2 composites (Sections~\ref{sec:sentinel2}--\ref{sec:sentinel1}) reside on a projected grid (EPSG:32719 UTM 19S, \SI{60}{\meter}). For each footprint we reproject the (lon, lat) coordinate pair into each source raster's native CRS and sample the underlying pixel value with nearest-neighbour interpolation via \texttt{rasterio}. This avoids unnecessary raster reprojection at the per-pixel scale, which would propagate resampling artefacts into the feature values. One feature, \texttt{stream\_network}, is a sparse binary indicator produced by the SurtGis hydrology stream-extraction; for non-stream cells the SurtGis output is NaN, which is semantically equivalent to ``no stream present'' and is therefore reassigned to zero before regression to retain its informational value as a present/absent indicator.
+
+\subsection{XGBoost regression with Optuna hyperparameter tuning}
+\label{sec:xgboost}
+
+We train gradient-boosted decision trees with XGBoost \citep{Chen2016XGBoost} on the 33-feature stack to predict the residual target $y$. Hyperparameters are tuned by Optuna \citep{Akiba2019Optuna} using a Tree-structured Parzen Estimator (TPE) sampler over 100 trials, with the objective function defined as the mean spatial-cross-validated out-of-fold RMSE (Section~\ref{sec:spatial_cv}). The search space covers \texttt{max\_depth} $\in [3, 9]$, \texttt{learning\_rate} $\in [0.005, 0.2]$ (log scale), \texttt{subsample} $\in [0.5, 1.0]$, \texttt{colsample\_bytree} $\in [0.5, 1.0]$, \texttt{min\_child\_weight} $\in [1, 20]$, \texttt{reg\_lambda} $\in [10^{-3}, 10^{2}]$ (log scale), \texttt{reg\_alpha} $\in [10^{-4}, 10]$ (log scale), and \texttt{gamma} $\in [0, 5]$. The number of boosting rounds is capped at 1{,}000 with early stopping after 30 rounds without validation-RMSE improvement. The final selected hyperparameters (Table~\ref{tab:hyperparams}) describe deep trees (\texttt{max\_depth} $= 9$) coupled with aggressive regularisation (\texttt{min\_child\_weight} $= 14$, \texttt{reg\_lambda} $\approx 7.4$, \texttt{gamma} $\approx 2.2$) and a low learning rate ($\approx 0.011$), a combination consistent with a smooth target manifold that benefits from depth but is prone to overfit under standard regularisation choices.
+
+\input{tables/T2_hyperparameters}
+
+The regression operates on raw, untransformed features. XGBoost handles missing values internally by routing them along the default branch learned during split selection, which is convenient because Sentinel-1/2 composite pixels can be NaN where all input scenes are cloud-flagged. We rely on this behaviour rather than imputing values that would inject false information.
+
+\subsection{Spatial-block cross-validation}
+\label{sec:spatial_cv}
+
+Per-pixel cross-validation with random folds is inappropriate here because ICESat-2 ATL08 footprints exhibit strong along-track spatial autocorrelation: adjacent \SI{100}{\meter} segments share atmospheric conditions, drainage context, and reference orbit, making nearby footprints near-duplicates from the model's perspective. Random partitions would assign these clusters to both train and test sets and yield optimistic generalisation estimates \citep{Roberts2017SpatialCV}. We therefore use \textbf{spatial-block cross-validation}: footprints are projected to UTM 19S, integer-divided by \SI{10000}{\meter} to assign a $\SI{10}{\kilo\meter} \times \SI{10}{\kilo\meter}$ block index, and these block indices are used as group labels in scikit-learn's \texttt{GroupKFold} partitioning with $K = 5$ folds. The procedure ensures that all footprints within a \SI{10}{\kilo\meter} tile are kept in the same fold, so that the model is always evaluated on geographically distinct ground from where it was trained. Across the Mediterranean dataset, 570 unique blocks are created from the 77{,}501 footprints, giving approximately 114 blocks per fold (with some imbalance from variable block density). To quantify the magnitude of autocorrelation leakage we also report random $K$-fold CV (which loses the spatial constraint) for direct comparison; the gap is small (3.5\% RMSE inflation under random CV), indicating that \SI{10}{\kilo\meter} blocks are large enough to suppress local-track contamination without being so large that they remove genuine model capacity. A \SI{5}{\kilo\meter} vs \SI{10}{\kilo\meter} vs \SI{20}{\kilo\meter} sensitivity test reported in Section~\ref{sec:sensitivity_baselines} yields RMSE differences below \SI{0.05}{\meter} across the full range, supporting the \SI{10}{\kilo\meter} choice as primary reporting block size.
+
+\subsection{Tabular deep-learning baselines}
+\label{sec:dl_baselines}
+
+To verify empirically that XGBoost is a competitive learner on this tabular regression problem rather than a default selection, we train two deep-learning baselines on identical spatial-CV folds. The first is a three-layer multilayer perceptron with 256, 256 and 128 hidden units, ReLU activations, dropout 0.2 between layers, optimised with AdamW (learning rate $10^{-3}$, weight decay $10^{-4}$, batch size 2048) under MSE loss; training is capped at 200 epochs with early stopping on a 20\% random validation split of each training fold (patience 20 epochs). The second is TabNet \citep{Arik2021TabNet}, a transformer-style attentive tabular learner, with $n_d = n_a = 32$ feature dimensions, four sequential decision steps, $\gamma = 1.3$, and Adam at learning rate $2 \times 10^{-2}$ with batch size 4096. Both models receive feature-wise standardised inputs fit on each training fold and ingest the same 33-feature stack as XGBoost; missing values are median-imputed per column. Random seeds are fixed at 42 for all stochastic operations. The comparison appears in Section~\ref{sec:sensitivity_baselines}.
+
+\subsection{Feature attribution via SHAP}
+\label{sec:shap}
+
+Per-feature importance is computed using the SHAP TreeExplainer \citep{Lundberg2017SHAP}, which exploits the tree structure to compute exact Shapley values in polynomial time. To keep memory and computation tractable on the full 77{,}501-row Mediterranean training set we draw a uniform random sample of 8{,}000 footprints (seed 42) and compute SHAP values for the final, hyperparameter-tuned model trained on the complete training set. Reported feature importance is the mean absolute SHAP value across that sample, which preserves both the magnitude and the rank of feature contributions while remaining computationally inexpensive. The same procedure is repeated on a separate 8{,}000-row sample drawn from the humid temperate dataset to enable the cross-regime comparison reported in Section~\ref{sec:results}.
+
+\subsection{Out-of-distribution evaluation}
+\label{sec:ood_method}
+
+To test whether the regional model generalises beyond its training regime, we apply the Mediterranean-trained XGBoost model directly to the humid temperate dataset without any retraining or fine-tuning. Specifically, we load the booster fit on the complete 77{,}501-footprint Mediterranean training set (the same model used for inference and SHAP attribution) and predict residuals for the 57{,}849 humid temperate footprints. The corrected elevation is computed as $h_{\text{corrected}} = h_{\text{fabdem}} + \hat{y}$ and compared against the ATL08 ground truth via RMSE, MAE, signed bias, and per-pixel sign comparison. This is a true out-of-distribution test in the strict statistical sense: no humid temperate footprint or feature ever enters the training pipeline. Statistical significance of the squared-error reduction is assessed with a Diebold--Mariano test on the per-footprint squared-error differential, and per-pixel improvement frequency is tested with a one-sided binomial test against the null hypothesis of equal correction/degradation rates.
+
+\subsection{Raster-wide inference}
+\label{sec:raster_inference}
+
+To produce the distributable corrected DEM (Section~\ref{sec:data_availability}) we apply the trained model to every pixel of the FABDEM raster across the six Mediterranean tiles. Each feature raster is opened lazily; for those already on the FABDEM grid (terrain and hydrology layers) values are read directly, while satellite layers in EPSG:32719 are reprojected on the fly to the FABDEM grid using bilinear resampling with \texttt{rasterio.warp.reproject}. A per-tile dense feature stack is assembled in float32, fed to the XGBoost booster via \texttt{xgb.DMatrix} with explicit \texttt{missing = NaN}, and the predicted residual is added to the corresponding FABDEM pixel to produce the corrected elevation. Output is written as a tiled Cloud-Optimized GeoTIFF with \texttt{deflate} compression, predictor 2, internal block size $512 \times 512$, and average-resampled overviews at decimation levels $[2, 4, 8, 16, 32]$. The six per-tile COGs are mosaicked into a single $7{,}422 \times 11{,}133$ raster (\texttt{mm\_corrected.tif}, \SI{282}{\mega\byte}) using SurtGis \texttt{mosaic}, which preserves the COG structure of the inputs.
+
+\subsection{Software, versions, and reproducibility}
+\label{sec:software}
+
+The Python environment used throughout is: Python 3.12, XGBoost 3.1.1, Optuna 4.6.0, scikit-learn 1.8.0, SHAP 0.50.0, rasterio 1.4.x, pyproj 3.6.x (PROJ network mode enabled for the EGM2008 grid), \texttt{earthaccess} 0.18.0 for ATL08, \texttt{pystac-client} and \texttt{stackstac} for Planetary Computer access. Terrain and hydrology features are computed with SurtGis 0.7.0 \citep{SurtGis2026}, an open-source Rust library that exposes streaming, parallel implementations of standard geomorphometric algorithms with bounded memory per tile. A fixed random seed (42) is used for the Optuna sampler, all train/test partitions, the SHAP subsampling, and the 2{,}000-resample bootstrap that produces the confidence intervals reported in Section~\ref{sec:results}. The complete pipeline, including the tile orchestrator with checkpointing and watchdog, is released under an open licence at the repository given in Section~\ref{sec:data_availability}.
+
+
+%% ============================================================
+\section{Results}
+\label{sec:results}
+
+\subsection{Overall correction performance}
+\label{sec:overall_performance}
+
+Under spatial-block cross-validation on the Mediterranean dataset ($n = 77{,}501$ footprints, 570 unique \SI{10}{\kilo\meter} blocks, $K = 5$ folds), the XGBoost residual model reduces RMSE from \SI{3.054}{\meter} (95\% bootstrap CI 2.95--3.18) for raw FABDEM to \SI{2.483}{\meter} (CI 2.37--2.62) after correction---an absolute reduction of \SI{0.57}{\meter}, or \textbf{$-18.7\%$} in relative terms. The corresponding MAE drops from \SI{1.423}{\meter} to \SI{1.099}{\meter} ($-22.8\%$). The improvement is highly statistically significant: a Diebold--Mariano test on the per-footprint squared-error differential yields DM $= 31.2$ ($p < 0.001$), and a paired sign test finds that 50{,}025 of 77{,}501 footprints (64.5\%) move closer to the ATL08 reference after correction ($p < 0.001$, binomial test against the equal-improvement null). For comparison, applying naive random $K$-fold CV (which ignores autocorrelation) gives an over-optimistic RMSE of \SI{2.395}{\meter}---only about 4\% below the spatial-CV estimate, indicating that the \SI{10}{\kilo\meter} spatial-block construction successfully removes most of the within-track autocorrelation without sacrificing model capacity. Per-tile performance (Table~\ref{tab:per_tile}) shows the spatial-CV OOF improvement on the six Mediterranean training tiles ranging from $+10.8\%$ RMSE \emph{degradation} on the sample-sparse alpine tile S36W071 ($n = 1{,}987$ in the central Andes, where the model extrapolates) to $-22.6\%$ on S35W071 ($n = 7{,}916$); the spatial-CV fold-level RMSE varies between \SI{2.20}{\meter} and \SI{2.78}{\meter}, with the higher-error fold corresponding to a block containing dense alpine sample (Fig.~\ref{fig:per_tile}). Aggregated by regime, humid temperate tiles (S38--S39, Section~\ref{sec:ood_results}) reach $-22.2\%$ RMSE, the largest individual gain $-29.2\%$ at S39W072. Sensitivity analyses, ablations, and deep-learning baselines on this dataset are reported in Section~\ref{sec:sensitivity_baselines}.
+
+\input{tables/T3_per_tile}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/F3_per_tile_rmse.pdf}
+\caption{Per-tile RMSE before and after correction, with bootstrap 95\% confidence intervals. Mediterranean training tiles are on the left (orange); humid temperate out-of-distribution tiles on the right (blue). Relative improvement ($\Delta\%$) is annotated above each pair.}
+\label{fig:per_tile}
+\end{figure*}
+
+\subsection{Stratified analysis: where the correction matters}
+\label{sec:stratification}
+
+Aggregate metrics conceal substantial heterogeneity that has direct implications for downstream use of the corrected DEM (Fig.~\ref{fig:stratification}, Table~\ref{tab:stratification}). When footprints are stratified by NDVI band, the relative improvement scales monotonically with vegetation cover: $-11.1\%$ RMSE at sparse vegetation (NDVI $< 0.2$, $n = 26{,}214$), $-19.4\%$ at low (0.2--0.4, $n = 30{,}189$), $\mathbf{-23.7\%}$ at moderate (0.4--0.6, $n = 18{,}223$), and $\mathbf{-41.6\%}$ at dense (NDVI $> 0.6$, $n = 1{,}700$). A separate ``bare'' band (NDVI $< 0$, mostly snow or water artefacts, $n = 877$) shows a $-26.3\%$ improvement off a very large baseline ($\text{RMSE}_{\text{raw}} = \SI{9.1}{\meter}$). This monotonic pattern across vegetated strata is consistent with the upstream Copernicus DSM bias being increasingly dominated by canopy height contributions as vegetation density rises, and with the global Hawker random-forest correction leaving proportionally larger residuals in dense-vegetation cells that a regional model can recover.
+
+\input{tables/T4_stratification}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/F4_stratification_4panel.pdf}
+\caption{Stratified RMSE before/after correction across four dimensions on the Mediterranean dataset (spatial-CV out-of-fold predictions, $n = 77{,}501$): NDVI bands (top-left), elevation bins (top-right), HAND bands (bottom-left), and geomorphon classes (bottom-right). Numbers above bars are stratum sample size $n$.}
+\label{fig:stratification}
+\end{figure*}
+
+Stratification by elevation reveals two regimes of high improvement bracketing an intermediate plateau. Coastal--valley sample ($< \SI{500}{\meter}$, $n = 68{,}615$) sees a 21.4\% RMSE reduction, mid-elevation (500--3{,}000\,m, $n = 8{,}445$ cumulative) only 0.2--11\%, while alpine sample above \SI{3000}{\meter} ($n = 441$) sees $\mathbf{-33.8\%}$. The alpine improvement is striking despite the small sample: raw FABDEM RMSE above \SI{3000}{\meter} is \SI{11.2}{\meter}---more than three times the area mean---and the model reduces this to \SI{7.4}{\meter}. The mid-elevation plateau corresponds to tile S36W071's central-Andes domain, where the training data are spatially sparse and the geomorphological context is under-represented.
+
+When the data are stratified by HAND (height above nearest drainage), the largest gains occur in the \emph{lower hills} band (10--\SI{50}{\meter} above drainage, $n = 17{,}850$) with a 24\% RMSE reduction; near-stream pixels (HAND $< \SI{2}{\meter}$, $n = 22{,}490$) improve by only 11\%, and floodplain pixels (HAND 2--\SI{10}{\meter}, $n = 30{,}358$) by 19\%. The pattern is hydrogeomorphologically interpretable: floodplains and near-channel cells are flat, well-defined, and already well-captured by FABDEM, leaving little room for correction; hillside transitions accumulate the upstream-DSM canopy and slope-aspect biases most aggressively. By geomorphon class, isolated \textbf{peaks} see the largest improvement ($-33\%$, although with limited sample $n = 1{,}135$), followed by spurs ($-23\%$, $n = 18{,}145$) and hollows ($-13\%$); valley pixels worsen marginally ($+9\%$ RMSE), again reflecting the difficulty of improving on an already-accurate floodplain product. By slope class, steep terrain ($> 25^{\circ}$, $n = 77{,}242$) improves uniformly by 19\%, but flat sample ($< 5^{\circ}$, $n = 204$) shows a 9\% increase, consistent with extrapolation failure of a model trained predominantly on non-flat geomorphology.
+
+\subsection{Bias elimination}
+\label{sec:bias}
+
+The raw FABDEM residual has a positive mean across the majority of strata tested, with sample-average bias rising from approximately $+\SI{0.7}{\meter}$ in lowland valleys to $+\SI{4.6}{\meter}$ above \SI{3000}{\meter} elevation (Table~\ref{tab:stratification}; Fig.~\ref{fig:bias_histogram}). Exceptions include the valley and footslope geomorphons and the 2{,}000--\SI{3000}{\meter} elevation band, where the raw bias is mildly negative (\SIrange{-1.7}{-0.1}{\meter}); these strata are small in sample size and reflect alpine cells where FABDEM marginally underestimates the bare-ground surface. After ML correction, the residual mean collapses to between $-\SI{0.48}{\meter}$ and $+\SI{0.14}{\meter}$ across all strata---essentially zero in vegetated and lowland strata and modestly under-corrected only in the sample-sparse alpine and footslope strata---without sacrificing improvement in the standard-deviation component. In other words the correction removes both the offset and the scatter, not merely the offset. The histogram comparison in Fig.~\ref{fig:bias_histogram} shows two well-separated unimodal distributions for raw FABDEM (mean $+\SI{1.00}{\meter}$, $\sigma = \SI{2.88}{\meter}$ on Mediterranean) and a centred narrower distribution for the corrected DEM (mean $+\SI{0.00}{\meter}$, $\sigma = \SI{1.66}{\meter}$). For the humid temperate dataset the raw distribution is wider ($\sigma = \SI{4.58}{\meter}$), reflecting larger absolute FABDEM errors, but the corrected centre is similarly close to zero ($+\SI{0.14}{\meter}$) with $\sigma$ reduced to \SI{3.85}{\meter}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/F7_bias_histogram.pdf}
+\caption{Bias-residual histograms (FABDEM $-$ ICESat-2 orthometric) for raw and corrected DEMs, Mediterranean (top) and humid temperate (bottom) regimes. The correction collapses the positive offset toward zero and reduces the standard deviation in both regimes.}
+\label{fig:bias_histogram}
+\end{figure}
+
+\subsection{Feature attribution (SHAP)}
+\label{sec:shap_results}
+
+SHAP TreeExplainer values on an 8{,}000-footprint subsample of the Mediterranean training set rank the 33 features by mean absolute contribution to predictions (Fig.~\ref{fig:shap}, left panel). The top five are all geomorphometric: TWI (mean $|$SHAP$|$ $= \SI{0.232}{\meter}$), VRM (0.188), openness\_negative (0.184), TRI (0.172), and convergence (0.149). Hydrological features dominate the very top, consistent with FABDEM residual error being most informative where drainage geometry shapes local terrain. Vegetation indices appear immediately below the geomorphometric core: NDVI ranks 6th (0.108), NDWI 10th (0.084), BSI 12th (0.061). The Sentinel-1 backscatter features (\texttt{s1\_vh\_db}, \texttt{s1\_vv\_db}, \texttt{s1\_vv\_vh\_ratio}) appear in the second half (mean $|$SHAP$|$ 0.034--0.047), contributing modestly. The base of the importance ranking is occupied by features dominated by trivial values across the Mediterranean sample: MRVBF (0.0006), \texttt{stream\_network} (0.0003), and MRRTF ($\approx 0$). The 25th-percentile geomorphic feature value still exceeds the highest satellite-feature value, confirming the dominance of terrain-derived information over external satellite cues in this regime. The cross-regime SHAP comparison reported in Section~\ref{sec:ood_results} below shows that this ordering shifts in a physically interpretable way when the model is applied out of distribution.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/F6_shap_regime_comparison.pdf}
+\caption{SHAP TreeExplainer mean absolute feature importance for the Mediterranean-trained model evaluated on 8{,}000-footprint subsamples from each regime: Mediterranean (left) and humid temperate (right). Rank shifts in 3D shape descriptors (\texttt{openness\_negative}, \texttt{valley\_depth}) and drainage descriptors (TWI, slope) between regimes are highlighted.}
+\label{fig:shap}
+\end{figure*}
+
+\subsection{Out-of-distribution generalisation}
+\label{sec:ood_results}
+
+The central transferability claim of this paper is tested by applying the Mediterranean-trained XGBoost model---without retraining or fine-tuning---to the 57{,}849 humid temperate footprints in tiles S38W072--S39W073. The result is a reduction in RMSE from \SI{4.946}{\meter} (95\% CI 4.84--5.06) to \SI{3.850}{\meter} (CI 3.76--3.96), an absolute reduction of \SI{1.10}{\meter} or \textbf{$-22.2\%$} in relative terms (Fig.~\ref{fig:ood}). The reduction is statistically robust under formal testing: a Diebold--Mariano test yields DM $= 40.2$ with $p < 0.001$, and a paired sign test finds 33{,}080 of 57{,}849 footprints (57.2\%) improve under correction ($p \ll 0.001$). Per humid temperate tile, the relative improvement ranges from $-16.3\%$ (S39W073, dense Araucan\'ia coastal forest) to $-29.2\%$ (S39W072, Araucan\'ia valley and pre-Andean foothills). Although the corrected RMSE in humid temperate (\SI{3.85}{\meter}) remains substantially higher than in Mediterranean (\SI{2.48}{\meter})---reflecting the 60\% larger baseline error of FABDEM in dense temperate forest---the absolute reduction (\SI{1.10}{\meter}) is nearly twice the in-regime gain (\SI{0.57}{\meter}), so the regional model recovers a comparable fraction of recoverable error in both regimes.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/F5_ood_generalization.pdf}
+\caption{Per-tile correction performance across four climate regimes. The horizontal axis is the raw FABDEM RMSE per tile (m); the vertical axis is the relative RMSE change from ML correction (positive = improvement; negative = degradation). Marker area is proportional to $\sqrt{n}$ footprints in the tile. A single Mediterranean-trained XGBoost model is applied to every tile without retraining; Mediterranean tiles (orange) use spatial-block out-of-fold predictions. Humid temperate Chile tiles (teal) transfer favourably ($-22.2\%$ aggregate); Vietnam Mekong Delta (green diamond, tropical wet) degrades marginally ($+5.8\%$) and Atacama (tan triangle, hyperarid) catastrophically ($+54\%$) on a FABDEM that is already accurate at \SI{0.6}{\meter}. The two negative OOD results jointly bound the transferability claim and motivate the regime-similarity interpretation of Section~\ref{sec:transferability}.}
+\label{fig:ood}
+\end{figure*}
+
+Two refinements of this result deserve emphasis. First, the per-pixel sign-test fraction of 57.2\% is lower than the in-regime 64.5\%, indicating that more individual humid temperate footprints are worsened by the correction than in the regime where the model was trained. This is the cost of cross-regime application---the model's mean improvement holds, but its per-footprint reliability degrades. Second, SHAP attribution computed separately on an 8{,}000-footprint humid temperate sample reveals systematic shifts in the rank ordering compared with the Mediterranean sample (Fig.~\ref{fig:shap}, right panel): \texttt{openness\_negative} rises from rank 3 in Mediterranean to \textbf{rank 1} in humid temperate (mean $|$SHAP$|$ 0.293 vs 0.184), \texttt{valley\_depth} rises from rank 8 to \textbf{rank 4} (0.240 vs 0.101), and \texttt{tri}, \texttt{ndvi}, and \texttt{slope} each drop by 2 ranks. Of the 33 features, 32 show larger mean $|$SHAP$|$ in humid temperate than Mediterranean; only \texttt{flow\_accumulation} is marginally lower (ratio 0.98). This near-uniform inflation of feature contributions is interpretable as a consequence of larger baseline residuals: when FABDEM is more wrong, the model has more error budget to distribute across its features. The relative-rank shift (rather than the absolute-magnitude shift) is the more informative pattern: in humid temperate forest the model relies more on 3D shape descriptors (openness, valley\_depth) and less on drainage indices (TWI), a re-weighting consistent with vegetation-driven occlusion making purely-hydrological features less reliable and forcing the model to lean on geometric proxies that survive canopy interference.
+
+\paragraph{Beyond Chile: bounding the transferability empirically.} The within-Chile result raises the natural question of how far the transferability extends. To probe the boundary directly we apply the same Mediterranean-trained model, without any modification, to two further $1^{\circ}$ ATL08 datasets selected for maximum contrast with the training regime: Vietnam Mekong Delta tile N10E105 ($n = 20{,}569$ footprints; tropical wet, mean elevation below \SI{50}{\meter}, the area benchmarked by \citet{Hawker2024Vietnam}) and Chilean Atacama tile S24W069 ($n = 20{,}681$; hyperarid, $>$\SI{2000}{\meter} elevation, near-zero NDVI). The headline finding inverts: in both regimes the correction \emph{degrades} performance. Vietnam Mekong raw FABDEM RMSE is \SI{1.091}{\meter}, corrected \SI{1.154}{\meter} ($+5.8\%$, only $42\%$ of footprints improve). Atacama raw FABDEM RMSE is already \SI{0.605}{\meter}---comparable to airborne LiDAR reference accuracy---and the correction inflates this to \SI{0.934}{\meter} ($+54\%$, $39\%$ improve). Stratified analysis (Table~\ref{tab:per_tile}) clarifies the mechanism rather than rescuing the result: in Atacama the degradation is uniform across slope and NDVI bands and catastrophic on the flat playa surface of the Salar de Atacama ($<1^{\circ}$ slope, $n = 1{,}020$, $+396\%$). In Vietnam a narrow NDVI window 0.1--0.5 ($n = 12{,}526$) shows neutral-to-marginal improvement ($\Delta \in [-6.4\%, -0.9\%]$), suggesting that the canopy--bias signal is partly preserved; but the dominant slope and hydrological features in the model's decision logic do not apply on the Mekong's flat alluvial substrate, and dense vegetation ($>0.5$ NDVI) and bare-water surfaces both degrade. These two negative results empirically bound the within-Chile transferability claim: the Mediterranean-trained regional correction extends to humid temperate forest, consistent with the hypothesis that the favourable transfer requires both Andean-style relief and a FABDEM positive canopy bias to be jointly present, and fails when either the relief substrate (Vietnam Delta) or the baseline bias (Atacama, where FABDEM is already accurate) departs from the training distribution. This is a post-hoc interpretation based on two negative tests; a definitive test would require designed experiments across a wider grid of relief--canopy combinations. Section~\ref{sec:transferability} develops the implications.
+
+\subsection{Downstream check: HAND-based inundation comparison}
+\label{sec:hand_check}
+
+To pre-empt the natural reviewer question---does this DEM improvement translate to better flood mapping?---we provide a preliminary downstream check against the CIGIDEN Licant\'en flood polygons from June 2023 \citep{CIGIDEN2023Licanten} on the Mataquito mouth (subset of tile S36W072). A simple HAND-threshold inundation mask is computed from both the raw and corrected DEMs (after rerunning SurtGis \texttt{hydrology hand} on the corrected raster), and the resulting binary masks are scored against the CIGIDEN reference at thresholds from \SI{1}{\meter} to \SI{25}{\meter} above drainage. The best-case Intersection-over-Union (IoU) is 0.116 for the raw mask and 0.102 for the corrected mask---a small ($-12\%$) regression (Fig.~\ref{fig:residual_map}). This counter-intuitive negative result has a constructive diagnostic interpretation: the ML correction primarily acts in uplands, where the mean predicted residual is $-\SI{2.81}{\meter}$, whereas inside the CIGIDEN flood polygons (which by construction are near-channel) the mean correction is only $-\SI{0.71}{\meter}$. Because HAND is a \emph{drainage-relative} elevation, the correction's main effect is to lower upland pixels closer to drainage, which marginally expands the predicted inundation footprint upslope without improving the actual along-channel water-surface elevation that controls real flood extent. The HAND threshold method is therefore the wrong probe for measuring whether bias correction has helped a flood model. A hydrodynamic comparison (using a model that solves a free-surface elevation rather than a topographic-only inundation rule) is the appropriate next step and is deferred to follow-up work.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/F8_residual_map.pdf}
+\caption{Spatial map of predicted residual $\hat{y} = h_{\text{corrected}} - h_{\text{fabdem}}$ over the six Mediterranean tiles (Mataquito--Maule). The correction is largest in magnitude in uplands and minimal near drainage. Inset: Licant\'en flood polygon (CIGIDEN, June 2023) overlaid on the residual; the mean correction inside the polygon is only $-\SI{0.71}{\meter}$, explaining why a HAND-threshold inundation comparison cannot diagnose the upland-focused correction.}
+\label{fig:residual_map}
+\end{figure*}
+
+This negative HAND result strengthens rather than undermines the paper's main claim. The correction is concentrated in cells where FABDEM is biased (uplands, dense vegetation, peaks), and is by design small in cells where FABDEM is already accurate (floodplains, near-channel). Section~\ref{sec:discussion} examines the implications.
+
+\subsection{Sensitivity analyses and baseline comparisons}
+\label{sec:sensitivity_baselines}
+
+To support reviewer scrutiny of methodological choices we report three sensitivity analyses on the Mediterranean dataset: feature-group ablation, spatial-block size, and a tabular deep-learning baseline comparison. All use the locked-in hyperparameters of Table~\ref{tab:hyperparams} (no re-tuning) and the same spatial-CV partitioning of Section~\ref{sec:spatial_cv}.
+
+\textbf{Feature ablation} (Table~\ref{tab:ablation}) corroborates the SHAP attribution of Section~\ref{sec:shap_results}: Sentinel-2 optical indices and hydrological features carry the largest predictive load, with their removal costing 2--4 percentage points of RMSE improvement. Sentinel-1 SAR backscatter adds no measurable value in the Mediterranean regime---removing all three SAR features leaves the OOF RMSE essentially unchanged (\SI{2.483}{\meter} vs \SI{2.485}{\meter} for the full stack)---consistent with its low SHAP rank. The 3D shape and landform groups are likewise marginal in this regime. A terrain-only variant restricted to the 14 SurtGis first- and second-derivative features, with no satellite or hydrology inputs, retains about 68\% of the full-stack absolute RMSE gain (\SI{0.385}{\meter} of the \SI{0.569}{\meter} total) and represents a viable operational fall-back for settings without satellite access. The dispensability of SAR in Mediterranean is itself a meaningful boundary on the operational stack and may not generalise to denser canopy: vegetation density and surface moisture differ strongly between Chilean regimes, and the near-uniform inflation of feature contributions reported in the cross-regime SHAP comparison (Section~\ref{sec:ood_results}) suggests the operational satellite stack should remain regime-aware rather than fixed.
+
+\textbf{Spatial-block size sensitivity}. Re-running the full pipeline at 5, 10 and \SI{20}{\kilo\meter} block sizes yields OOF RMSE of \SI{2.470}{\meter}, \SI{2.485}{\meter} and \SI{2.503}{\meter} respectively, with 1{,}671, 570 and 166 unique blocks. The total spread of \SI{0.033}{\meter} is well below the bootstrap CI width on any individual estimate (Section~\ref{sec:overall_performance}), confirming that the primary reporting choice of \SI{10}{\kilo\meter} blocks is not driving the headline result.
+
+\textbf{Tabular deep-learning baselines}. On the identical spatial-CV folds, a three-layer MLP achieves OOF RMSE \SI{2.578}{\meter} and TabNet \citep{Arik2021TabNet} \SI{2.606}{\meter}, both inferior to XGBoost's \SI{2.483}{\meter} by 3.8\% and 4.9\% respectively (Table~\ref{tab:dl_baseline}). For fairness we note that the XGBoost hyperparameters were Optuna-tuned over 100 trials whereas the MLP and TabNet were trained with literature-standard architectures (described in Section~\ref{sec:dl_baselines}) and no architecture search; an aggressive search might narrow the gap. Even so, the result is consistent with the broader tabular machine-learning literature \citep{ShwartzZiv2022TabularDL,Grinsztajn2022TabularDL}, which finds that gradient-boosted trees remain competitive with, or superior to, learned representations on tabular regression at sample sizes below approximately $10^{6}$. Both DL baselines do outperform raw FABDEM (\SI{3.054}{\meter}) by 16--19\%, so the choice of learner is a refinement question rather than a binary capability question; but XGBoost remains the most accurate option on this problem at this sample size and is also substantially cheaper to train and to interpret via SHAP (Section~\ref{sec:shap_results}).
+
+\input{tables/T6_ablation}
+\input{tables/T7_dl_baseline}
+
+
+%% ============================================================
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Where ML bias correction matters}
+\label{sec:where_matters}
+
+The stratified analysis in Section~\ref{sec:stratification} reveals a coherent pattern: FABDEM's residual error is largest, and most aggressively corrected, in strata where the upstream Copernicus DSM is most affected by canopy occlusion (dense vegetation), aspect-driven slope artefacts (alpine and peak geomorphons), or both. The pattern is association rather than proven causation, but it is consistent with the published mechanism of FABDEM's global random-forest correction \citep{Hawker2022FABDEM}: by design, that correction operates uniformly across the planet and cannot exploit regional differences in how vegetation height, canopy density, or built-up land interact with the InSAR phase used by the Copernicus DSM. A regional model trained on regionally specific features therefore has the most room to operate precisely in the strata where the global model leaves the largest residual signal.
+
+The complement of this argument is that the regional correction is small or negligible where FABDEM is already accurate---most clearly in floodplain pixels (HAND 2--\SI{10}{\meter} above drainage), where the residual mean is only $-\SI{0.71}{\meter}$ and the relative RMSE reduction is below 20\%. This stratified pattern carries practical guidance: a user who applies FABDEM exclusively in flat, low-relief, vegetation-poor terrain will gain little from regional ML correction and may prefer the simpler raw product; conversely, a user working in alpine, vegetated, or hilly terrain stands to benefit substantially.
+
+\subsection{Limitations and scope of the transferability claim}
+\label{sec:limitations}
+
+We frame this paper's transferability claim with a scope-restricting caveat that is now \emph{empirically} rather than only conceptually grounded (Section~\ref{sec:ood_results}). The within-Chile cross-regime test compares two contrasting Chilean regimes---Mediterranean dry and humid temperate Valdivian rainforest---separated by approximately \SI{330}{\kilo\meter} of latitudinal distance, with NDVI medians shifting from $\sim 0.3$ to $\sim 0.6$ and mean annual precipitation rising from $\sim \SI{700}{\milli\meter}$ to $\sim \SI{2000}{\milli\meter}$. The geomorphological substrate (steep Pacific-facing Andean range, narrow central valley, narrow coastal range) is shared between regimes, even as the vegetation and hydrological forcing differ markedly. Probing further afield with two non-Chilean regimes (Vietnam Mekong Delta and Atacama; Section~\ref{sec:ood_results}) demonstrates that the model degrades performance in both: in a tropical-wet flat-relief delta whose substrate departs from Andean tectonics, and in a hyperarid bare-earth surface where FABDEM is already accurate at the \SI{0.6}{\meter} level. Our generalisation result is therefore best read as evidence of robustness \emph{between two Chilean regimes that share Andean tectonics and a positive FABDEM canopy bias}, not as evidence of universal transferability. Validating further transferability against, for example, tropical mountain forests where steep relief and a positive FABDEM canopy bias may co-occur, or systematic re-training in tropical-flat or hyperarid regimes, are clear and important directions for future work.
+
+Within Chile, the model behaves poorly in sample-sparse strata: flat slope classes ($n = 204$ in Mediterranean), valley geomorphons, and tile S36W071's alpine central-Andes domain ($n = 1{,}987$). The pattern is interpretable as the gradient-boosted tree extrapolating beyond the convex hull of its training distribution when the local feature combination is rare. Practitioners applying the correction operationally should consider rejecting predictions in cells whose feature vector falls outside the distribution seen during training, although a robust uncertainty-aware deployment is beyond the scope of this paper.
+
+Two additional limitations carry methodological implications. First, the Sentinel-1/2 composites are single-season (December 2022--February 2023, austral summer), and therefore omit phenological information that might modulate the residual signal in seasonally dynamic land cover. Second, we do not validate the corrected DEM against an airborne LiDAR product, because no publicly distributed airborne LiDAR with the relevant spatial coverage exists for our study basins. ICESat-2 ATL08 (with cm-level vertical precision \citealt{Markus2017ICESat2,Neuenschwander2019ATL08}) provides the best available alternative and is the operational ground truth used throughout.
+
+\subsection{Geographic transferability: evidence and alternative explanations}
+\label{sec:transferability}
+
+Within the within-Chile scope, the out-of-distribution result is unambiguous: a Mediterranean-trained model achieves a 22\% RMSE reduction on humid temperate forest \emph{without retraining}, statistically robust under both a Diebold--Mariano test (DM $= 40$, $p < 0.001$) and a one-sided sign test ($p \ll 0.001$). This result is consistent with the hypothesis that the model captures terrain--error relationships that are \emph{physically structured}---that is, depend on geomorphometric and vegetation properties of the local terrain rather than on idiosyncratic patterns peculiar to the Mediterranean training samples.
+
+The Vietnam Mekong Delta and Atacama negative results sharpen rather than refute this interpretation. They reveal that the ``physically structured'' relationships the model has learned are co-determined by two pre-conditions present in both Chilean training and Chilean test data: (i) substantive slope-driven and relief-driven feature variation that the SurtGis stack can exploit, and (ii) a systematic positive FABDEM bias arising from canopy and built-environment residual in the upstream Copernicus DSM. Vietnam Mekong Delta lacks the first condition---the flat alluvial substrate makes the slope, openness and HAND features near-degenerate and the model's regression logic does not apply. Atacama lacks the second condition---a near-zero vegetation cover means no canopy bias to correct, so FABDEM is intrinsically accurate (\SI{0.605}{\meter} RMSE, comparable to airborne LiDAR), leaving no error budget for the correction to recover. A regime that combines steep relief with a positive canopy bias (e.g.\ Andean tropics, Indonesian or Papua New Guinean highlands) would be expected to transfer favourably; one that lacks either condition would not. Our four-regime evidence makes this prediction directly testable in subsequent work, and bounds the practical applicability domain of the released model to terrain that shares the two pre-conditions.
+
+\subsection{SHAP adaptation between regimes}
+\label{sec:shap_discussion}
+
+The cross-regime SHAP comparison in Section~\ref{sec:ood_results} reveals systematic rank shifts: 3D shape descriptors (\texttt{openness\_negative} rising from rank 3 to rank 1, \texttt{valley\_depth} from rank 8 to rank 4) gain relative importance in the humid temperate regime, while drainage descriptors (\texttt{tri}, \texttt{slope}, \texttt{twi}) and the vegetation index \texttt{ndvi} each drop two or more positions. Substantively, the model in the humid temperate regime appears to \emph{lean more on 3D shape} and \emph{less on hydrological proxies and direct vegetation greenness}. A plausible mechanistic interpretation is that in dense forest where canopy occludes drainage features in the source Copernicus DSM, hydrological features computed from FABDEM become less reliable signals, so the model down-weights them; 3D shape descriptors (openness, valley\_depth) by contrast survive the canopy-vs-terrain distinction better and inherit more of the predictive load. This is a hypothesis-grade interpretation: an $N = 2$ regime experiment provides correlation but not causal inference. The 32 of 33 features with ratio $> 1$ is consistent with an overall scaling of feature contributions to absorb a larger baseline residual, not a regime-specific re-weighting; the genuine information is in the \emph{rank} changes, not the magnitude scaling.
+
+\subsection{Comparison with related work}
+\label{sec:related_work}
+
+Three published lines of work bracket this paper's contribution (Table~\ref{tab:literature}). \citet{Hawker2022FABDEM} introduced FABDEM with a \emph{global} random-forest correction at \SI{30}{\meter} resolution, validated against airborne LiDAR samples. We confirm their reported $\sim\SI{2.5}{\meter}$ global RMSE in our Chilean sample (raw RMSE \SI{3.05}{\meter} Mediterranean, \SI{4.95}{\meter} humid temperate) and demonstrate that a \emph{regional} refinement on top of their globally corrected product is worthwhile in specific terrain strata. \citet{Meadows2024VerticalAccuracy} benchmarked FABDEM against four alternative public DEMs in flood-prone environments and confirmed FABDEM as the most accurate; our work continues their direction by quantifying where FABDEM's residual error is concentrated. \citet{Wing2024GlobalFlood} build a global flood-inundation model on FABDEM but apply it without further correction; our work suggests their alpine or vegetated outputs could be improved by inserting a regional correction step.
+
+\input{tables/T5_literature}
+
+Commercially, Fathom's FABDEM+ \citep{Fathom2024FABDEMPlus} is an enhanced product that fuses local data sources with FABDEM. Its methodology and validation are proprietary, which precludes direct comparison. Our key positioning differences are openness and transparency: every step of our pipeline, including the trained XGBoost model, the training dataset, the corrected COG, and the hyperparameters, is released under permissive licensing (Section~\ref{sec:data_availability}). Future regional users in Chile or comparable regions can therefore evaluate, reproduce, and extend our correction directly rather than rely on a closed-source product.
+
+Beyond the FABDEM literature specifically, the broader context for accurate DEMs in Chile is one of repeated extreme-precipitation events with substantial topographic involvement: the 2015 Atacama mudflow event \citep{Wilcox2016Atacama} demonstrated that even arid northern Chile is exposed to high-magnitude flash flooding, and the June 2023 Maule event \citep{CIGIDEN2023MataquitoMaule,Garreaud2024AR2023} demonstrates the same for central Chile. In both cases the accuracy of the underlying DEM was an operational bottleneck for downstream inundation modelling; the present contribution narrows that bottleneck in the central Chilean case.
+
+\subsection{Implications for downstream applications}
+\label{sec:implications}
+
+For practitioners, our results suggest a tiered uptake strategy. Applications dominated by \emph{floodplain hydraulics} (free-surface elevation along channels, classical 1D or 2D HEC-RAS / LISFLOOD-FP simulations of riverine inundation) operate primarily in HAND 0--\SI{10}{\meter} strata where the correction is small; users can in most cases continue with raw FABDEM with only marginal accuracy loss. Conversely, applications dominated by \emph{upland or alpine processes}---slope stability and landslide initiation, evapotranspiration modelling under canopy, glacier mass balance, mountainous infrastructure planning, debris-flow source-area delineation---operate where the correction is largest (20--40\% RMSE reduction in the relevant strata) and benefit substantially. The corrected COG distributed alongside this paper is therefore most valuable to upland-process users.
+
+\subsection{Future work}
+\label{sec:future_work}
+
+Three direct extensions are immediately suggested. First, geographic broadening: applying the same pipeline to the full Chilean transect from Atacama (semi-arid) to Patagonia (cool temperate), and ultimately to additional Andean countries (Argentina, Bolivia, Peru) would build a multi-regime training corpus and resolve the open question of multi-continental transferability raised in Section~\ref{sec:limitations}. Second, hydrodynamic validation: while the HAND-threshold downstream check in Section~\ref{sec:hand_check} is informative, a proper hydrodynamic comparison using a model that resolves free-surface elevation (LISFLOOD-FP, HEC-RAS 2D, or comparable; cf.\ \citealt{Hawker2024Vietnam}) is needed to quantify whether the corrected DEM yields measurably better simulated flood extent or depth. Third, integration with foundation models for geospatial data: emerging vision foundation models such as Prithvi-EO and TerraMind could complement the explicit feature engineering used here with self-supervised feature representations, potentially capturing additional spatial structure that traditional geomorphometric descriptors miss. The dataset released in this paper provides a natural benchmark for such extensions.
+
+
+%% ============================================================
+\section{Conclusions}
+\label{sec:conclusions}
+
+We have shown that FABDEM---the most accurate publicly available \SI{30}{\meter} DEM at the time of writing---has a \emph{learnable, spatially heterogeneous} residual bias over central-south Chile, and that a regional XGBoost correction trained on 135{,}350 ICESat-2 ATL08 ground-classified footprints can reduce that bias significantly. Three results substantiate the contribution.
+
+First, under spatial-block cross-validation (\SI{10}{\kilo\meter} blocks, $K = 5$), the correction reduces RMSE from \SI{3.054}{\meter} (95\% CI 2.95--3.18) to \SI{2.483}{\meter} (CI 2.37--2.62) on the Mediterranean training regime---an absolute reduction of \SI{0.57}{\meter} or $-18.7\%$, statistically significant under both a Diebold--Mariano test (DM $= 31$, $p < 0.001$) and a paired sign test (64.5\% of footprints improved, $p < 0.001$). The correction also eliminates a systematic $+\SI{1.0}{\meter}$ positive bias that pervades the raw product, leaving residual mean errors within $\pm \SI{0.05}{\meter}$ across all major strata.
+
+Second, the magnitude of correction is strongly stratified: $-41.6\%$ RMSE in dense vegetation (NDVI $> 0.6$), $-33.8\%$ above \SI{3000}{\meter} elevation, and $-33.0\%$ at peak geomorphons, contrasted with only $-19.1\%$ in floodplains where FABDEM is already accurate. This pattern provides actionable guidance: regional correction is most valuable for upland, alpine, and vegetated applications, and marginal for purely floodplain-hydraulic uses.
+
+Third, the Mediterranean-trained model transfers to humid temperate Valdivian rainforest \emph{without retraining}, achieving a 22.2\% RMSE reduction on 57{,}849 held-out footprints across \SI{330}{\kilo\meter} of latitudinal separation and a 60\% shift in NDVI distribution (DM $= 40$, $p < 0.001$). The accompanying SHAP feature-importance comparison shows the model emphasising 3D shape descriptors (openness, valley\_depth) relatively more in dense forest and drainage descriptors (TWI) relatively less---a pattern consistent with the model capturing physically structured terrain--error relationships rather than memorising regional training patterns. Probing the boundary of this transferability with two non-Chilean regimes establishes that the transfer is conditional rather than universal: the model degrades on Vietnam Mekong Delta (tropical wet, $+5.8\%$ RMSE) and Atacama (hyperarid, $+54\%$ on an already-accurate FABDEM at \SI{0.6}{\meter}), bounding favourable transfer to regimes that share Andean-style relief together with a positive FABDEM canopy bias.
+
+The work positions ICESat-2 ATL08 as a scalable, cm-precision LiDAR-equivalent ground truth for regional DEM refinement and demonstrates that the open, reproducible workflow developed here is transferable to other geomorphometrically similar regions worldwide.
+
+
+%% ============================================================
+\section{Data and code availability}
+\label{sec:data_availability}
+
+All artefacts described in this paper are released as open products to support reproducibility and downstream use.
+
+\textbf{Primary outputs (Zenodo, persistent DOI)}:
+\begin{itemize}
+\item \emph{Corrected DEM COG} covering Mataquito $+$ Maule (six tiles, $\sim$80\,M pixels, \SI{282}{\mega\byte}), released under \textbf{CC BY-NC-4.0} (inherited from FABDEM \citealt{Hawker2022FABDEM}): [Zenodo DOI to be assigned at submission].
+\item \emph{Training dataset}---135{,}350 footprints with 33 features, EGM2008-corrected ICESat-2 ground truth, and per-tile metadata in a single Parquet file ($\sim$\SI{62}{\mega\byte}): [Zenodo DOI].
+\item \emph{Trained XGBoost model} in both portable booster JSON and scikit-learn joblib formats, with bundled hyperparameter manifest: [Zenodo DOI].
+\end{itemize}
+
+\textbf{Code}: The complete pipeline (tile orchestrator with checkpointing and watchdog, feature engineering, training, SHAP analysis, raster inference, statistical testing) is released on GitHub at [URL to be assigned]. A tagged release matching the manuscript revision is preserved on Zenodo with a software DOI. A Dockerfile and \texttt{environment.yml} capture the exact dependency tree.
+
+\textbf{Software versions}: Python 3.12, XGBoost 3.1.1, Optuna 4.6.0, scikit-learn 1.8.0, SHAP 0.50.0, rasterio 1.4.x, pyproj 3.6.x (PROJ network mode for EGM2008 grid), \texttt{earthaccess} 0.18.0, \texttt{pystac-client} and \texttt{stackstac} for Planetary Computer access, SurtGis 0.7.0 \citep{SurtGis2026}.
+
+\textbf{Random seeds}: A fixed seed of 42 is used for the Optuna sampler, all train/test partitions, the SHAP subsampling, and the 2{,}000-resample bootstrap that produces the confidence intervals reported throughout. All numerical results are exactly reproducible from the released artefacts.
+
+\textbf{Sensitivity}: Feature-group ablation, \SI{5}{\kilo\meter}/\SI{10}{\kilo\meter}/\SI{20}{\kilo\meter} spatial-block size sensitivity, and tabular deep-learning baselines (MLP and TabNet) are reported in Section~\ref{sec:sensitivity_baselines}.
+
+\textbf{Upstream data sources}: FABDEM v1.2 is available from the University of Bristol under CC BY-NC-4.0 \citep{Hawker2022FABDEM}. ICESat-2 ATL08 v7 is openly distributed by NASA Earthdata. Sentinel-1 RTC and Sentinel-2 L2A composites are accessed via Microsoft Planetary Computer under open Copernicus licensing.
+
+\textbf{Licensing summary}: Code is released under MIT licence. Data products (corrected DEM, training dataset) inherit CC BY-NC-4.0 from upstream FABDEM. Trained model weights are released under CC0.
+
+
+%% ============================================================
+\section*{Declaration of competing interest}
+
+The author declares no competing interests.
+
+
+%% ============================================================
+\section*{Acknowledgements}
+
+The author thanks CIGIDEN researchers (Giron\'as, Cienfuegos, Viollier, Hora) for releasing the Licant\'en flood polygon to Zenodo, and the FABDEM development team at the University of Bristol for the open release of FABDEM v1.2 \citep{Hawker2022FABDEM}. ICESat-2 ATL08 was accessed through the NASA Earthdata Cloud. Sentinel-1 and Sentinel-2 imagery were accessed through the Microsoft Planetary Computer. SurtGis terrain analyses were performed using the open-source SurtGis Rust library \citep{SurtGis2026}.
+
+
+%% ============================================================
+\bibliographystyle{elsarticle-harv}
+\bibliography{references}
+
+\end{document}

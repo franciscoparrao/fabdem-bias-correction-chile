@@ -1,0 +1,352 @@
+% ============================================================================
+% references.bib — FABDEM-ML stratified bias correction paper
+% Last revision: 2026-05-16
+% ============================================================================
+
+% ---- DEM products ----------------------------------------------------------
+
+@article{Hawker2022FABDEM,
+  author  = {Hawker, Laurence and Uhe, Peter and Paulo, Luntadila and Sosa, Jeison and Savage, James and Sampson, Christopher and Neal, Jeffrey},
+  title   = {A 30 m global map of elevation with forests and buildings removed},
+  journal = {Environmental Research Letters},
+  year    = {2022},
+  volume  = {17},
+  number  = {2},
+  pages   = {024016},
+  doi     = {10.1088/1748-9326/ac4d4f}
+}
+
+@article{Yamazaki2017MERIT,
+  author  = {Yamazaki, Dai and Ikeshima, Daiki and Tawatari, Ryunosuke and Yamaguchi, Tomohiro and O'Loughlin, Fiachra and Neal, Jeffrey C. and Sampson, Christopher C. and Kanae, Shinjiro and Bates, Paul D.},
+  title   = {A high-accuracy map of global terrain elevations},
+  journal = {Geophysical Research Letters},
+  year    = {2017},
+  volume  = {44},
+  number  = {11},
+  pages   = {5844--5853},
+  doi     = {10.1002/2017GL072874}
+}
+
+@article{Farr2007SRTM,
+  author  = {Farr, Tom G. and Rosen, Paul A. and Caro, Edward and Crippen, Robert and Duren, Riley and Hensley, Scott and Kobrick, Michael and Paller, Mimi and Rodriguez, Ernesto and Roth, Ladislav and Seal, David and Shaffer, Scott and Shimada, Joanne and Umland, Jeffrey and Werner, Marian and Oskin, Michael and Burbank, Douglas and Alsdorf, Douglas},
+  title   = {The {Shuttle} {Radar} {Topography} {Mission}},
+  journal = {Reviews of Geophysics},
+  year    = {2007},
+  volume  = {45},
+  number  = {2},
+  pages   = {RG2004},
+  doi     = {10.1029/2005RG000183}
+}
+
+@article{Rizzoli2017TanDEMX,
+  author  = {Rizzoli, Paola and Martone, Michele and Gonzalez, Carolina and Wecklich, Christopher and Borla Tridon, Daniela and Br{\"a}utigam, Benjamin and Bachmann, Markus and Schulze, Daniel and Fritz, Thomas and Huber, Martin and Wessel, Birgit and Krieger, Gerhard and Zink, Manfred and Moreira, Alberto},
+  title   = {Generation and performance assessment of the global {TanDEM-X} digital elevation model},
+  journal = {ISPRS Journal of Photogrammetry and Remote Sensing},
+  year    = {2017},
+  volume  = {132},
+  pages   = {119--139},
+  doi     = {10.1016/j.isprsjprs.2017.08.008}
+}
+
+@article{Meadows2024VerticalAccuracy,
+  author  = {Meadows, Michael E. and Jones, Simon and Reinke, Karin},
+  title   = {Vertical accuracy assessment of freely available global {DEMs} ({FABDEM}, {Copernicus} {DEM}, {NASADEM}, {AW3D30} and {SRTM}) in flood-prone environments},
+  journal = {International Journal of Digital Earth},
+  year    = {2024},
+  volume  = {17},
+  number  = {1},
+  pages   = {2308734},
+  doi     = {10.1080/17538947.2024.2308734}
+}
+
+% ---- FABDEM applications (flood) -------------------------------------------
+
+@article{Wing2024GlobalFlood,
+  author  = {Wing, Oliver E. J. and Bates, Paul D. and Sampson, Christopher C. and Smith, Andrew M. and Quinn, Niall and Shustikova, Iuliia and Neal, Jeffrey C.},
+  title   = {A 30 m global flood inundation model for any climate scenario},
+  journal = {Water Resources Research},
+  year    = {2024},
+  volume  = {60},
+  number  = {3},
+  pages   = {e2023WR036460},
+  doi     = {10.1029/2023WR036460}
+}
+
+@article{Hawker2024Vietnam,
+  author  = {Hawker, Laurence and Neal, Jeffrey and Savage, James and Kirkpatrick, Thomas and Lord, Rachel and Zylberberg, Yanos and Groeger, Andre and Thuy, Truong Dang and Fox, Sean and Agyemang, Felix and Nam, Pham Khanh},
+  title   = {Assessing {LISFLOOD-FP} with the next-generation digital elevation model {FABDEM} using household survey and remote sensing data in the {Central} {Highlands} of {Vietnam}},
+  journal = {Natural Hazards and Earth System Sciences},
+  year    = {2024},
+  volume  = {24},
+  number  = {2},
+  pages   = {539--560},
+  doi     = {10.5194/nhess-24-539-2024}
+}
+
+% ---- ICESat-2 / ATL08 ------------------------------------------------------
+
+@article{Markus2017ICESat2,
+  author  = {Markus, Thorsten and Neumann, Thomas and Martino, Anthony and Abdalati, Waleed and Brunt, Kelly and Csatho, Bea and Farrell, Sinead and Fricker, Helen and Gardner, Alex and Harding, David and Jasinski, Michael and Kwok, Ron and Magruder, Lori and Lubin, Dan and Luthcke, Scott and Morison, James and Nelson, Ross and Neuenschwander, Amy and Palm, Stephen and Popescu, Sorin and Shum, C. K. and Schutz, Bob E. and Smith, Benjamin and Yang, Yuekui and Zwally, Jay},
+  title   = {The {Ice}, {Cloud}, and land {Elevation} {Satellite-2} ({ICESat-2}): {Science} requirements, concept, and implementation},
+  journal = {Remote Sensing of Environment},
+  year    = {2017},
+  volume  = {190},
+  pages   = {260--273},
+  doi     = {10.1016/j.rse.2016.12.029}
+}
+
+@article{Neuenschwander2019ATL08,
+  author  = {Neuenschwander, Amy and Pitts, Katherine},
+  title   = {The {ATL08} land and vegetation product for the {ICESat-2} {Mission}},
+  journal = {Remote Sensing of Environment},
+  year    = {2019},
+  volume  = {221},
+  pages   = {247--259},
+  doi     = {10.1016/j.rse.2018.11.005}
+}
+
+% NOTE: Removed dubious "Magruder2021ICESat2Performance" entry — title not in
+% OpenAlex/CrossRef. ICESat-2 mission + ATL08 product already covered by
+% Markus2017ICESat2 and Neuenschwander2019ATL08. If a Magruder validation paper
+% is needed, replace with a verified DOI before submission.
+
+% ---- Geomorphometry / terrain analysis -------------------------------------
+
+@article{Jasiewicz2013Geomorphons,
+  author  = {Jasiewicz, Jaros{\l}aw and Stepinski, Tomasz F.},
+  title   = {Geomorphons---a pattern recognition approach to classification and mapping of landforms},
+  journal = {Geomorphology},
+  year    = {2013},
+  volume  = {182},
+  pages   = {147--156},
+  doi     = {10.1016/j.geomorph.2012.11.005}
+}
+
+@article{Beven1979TOPMODEL,
+  author  = {Beven, Keith J. and Kirkby, Mike J.},
+  title   = {A physically based, variable contributing area model of basin hydrology},
+  journal = {Hydrological Sciences Bulletin},
+  year    = {1979},
+  volume  = {24},
+  number  = {1},
+  pages   = {43--69},
+  doi     = {10.1080/02626667909491834}
+}
+
+@article{Nobre2011HAND,
+  author  = {Nobre, Antonio Donato and Cuartas, Luz Adriana and Hodnett, Martin and Renn{\'o}, Camilo Daleles and Rodrigues, Gabriela and Silveira, Augusto and Waterloo, Maarten and Saleska, Scott},
+  title   = {Height {Above} the {Nearest} {Drainage}---a hydrologically relevant new terrain model},
+  journal = {Journal of Hydrology},
+  year    = {2011},
+  volume  = {404},
+  number  = {1--2},
+  pages   = {13--29},
+  doi     = {10.1016/j.jhydrol.2011.03.051}
+}
+
+@article{Gallant2003MRVBF,
+  author  = {Gallant, John C. and Dowling, Trevor I.},
+  title   = {A multiresolution index of valley bottom flatness for mapping depositional areas},
+  journal = {Water Resources Research},
+  year    = {2003},
+  volume  = {39},
+  number  = {12},
+  pages   = {1347},
+  doi     = {10.1029/2002WR001426}
+}
+
+@article{Yokoyama2002Openness,
+  author  = {Yokoyama, Ryuzo and Shirasawa, Michio and Pike, Richard J.},
+  title   = {Visualizing topography by openness: a new application of image processing to digital elevation models},
+  journal = {Photogrammetric Engineering and Remote Sensing},
+  year    = {2002},
+  volume  = {68},
+  number  = {3},
+  pages   = {257--266}
+}
+
+% ---- Datum / geoid ---------------------------------------------------------
+
+@article{Pavlis2012EGM2008,
+  author  = {Pavlis, Nikolaos K. and Holmes, Simon A. and Kenyon, Steve C. and Factor, John K.},
+  title   = {The development and evaluation of the {Earth} {Gravitational} {Model} 2008 ({EGM2008})},
+  journal = {Journal of Geophysical Research: Solid Earth},
+  year    = {2012},
+  volume  = {117},
+  number  = {B4},
+  pages   = {B04406},
+  doi     = {10.1029/2011JB008916}
+}
+
+% ---- Machine learning ------------------------------------------------------
+
+@inproceedings{Chen2016XGBoost,
+  author    = {Chen, Tianqi and Guestrin, Carlos},
+  title     = {{XGBoost}: A scalable tree boosting system},
+  booktitle = {Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining},
+  year      = {2016},
+  pages     = {785--794},
+  doi       = {10.1145/2939672.2939785}
+}
+
+@inproceedings{Akiba2019Optuna,
+  author    = {Akiba, Takuya and Sano, Shotaro and Yanase, Toshihiko and Ohta, Takeru and Koyama, Masanori},
+  title     = {{Optuna}: A next-generation hyperparameter optimization framework},
+  booktitle = {Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining},
+  year      = {2019},
+  pages     = {2623--2631},
+  doi       = {10.1145/3292500.3330701}
+}
+
+@inproceedings{Lundberg2017SHAP,
+  author    = {Lundberg, Scott M. and Lee, Su-In},
+  title     = {A unified approach to interpreting model predictions},
+  booktitle = {Advances in Neural Information Processing Systems 30 (NeurIPS 2017)},
+  year      = {2017},
+  pages     = {4765--4774},
+  doi       = {10.48550/arxiv.1705.07874}
+}
+
+@article{Roberts2017SpatialCV,
+  author  = {Roberts, David R. and Bahn, Volker and Ciuti, Simone and Boyce, Mark S. and Elith, Jane and Guillera-Arroita, Gurutzeta and Hauenstein, Severin and Lahoz-Monfort, Jos{\'e} J. and Schr{\"o}der, Boris and Thuiller, Wilfried and Warton, David I. and Wintle, Brendan A. and Hartig, Florian and Dormann, Carsten F.},
+  title   = {Cross-validation strategies for data with temporal, spatial, hierarchical, or phylogenetic structure},
+  journal = {Ecography},
+  year    = {2017},
+  volume  = {40},
+  number  = {8},
+  pages   = {913--929},
+  doi     = {10.1111/ecog.02881}
+}
+
+% ---- Chile flood events ----------------------------------------------------
+
+@article{Wilcox2016Atacama,
+  author  = {Wilcox, Andrew C. and Escauriaza, Cristian and Agredano, Roberto and Mignot, Emmanuel and Z{\'u}{\~n}iga, Victor and Otarola, Sebasti{\'a}n and Castro, Loreto and Gironas, Jorge and Cienfuegos, Rodrigo and Mao, Luca},
+  title   = {An integrated analysis of the {March} 2015 {Atacama} floods},
+  journal = {Geophysical Research Letters},
+  year    = {2016},
+  volume  = {43},
+  number  = {15},
+  pages   = {8035--8043},
+  doi     = {10.1002/2016GL069751}
+}
+
+@article{Garreaud2024AR2023,
+  author  = {Garreaud, Ren{\'e} D. and Falvey, Mark and Montecinos, Aldo},
+  title   = {Atmospheric rivers and their connection to extreme precipitation in central {Chile}: insights from the {June} 2023 event},
+  journal = {Journal of Hydrometeorology},
+  year    = {2024},
+  note    = {Submitted / preprint; reference to be confirmed against CR2 report \emph{Vuelven los gigantes}, \url{https://www.cr2.cl/analisis-cr2-vuelven-los-gigantes/}}
+}
+
+@misc{CIGIDEN2023Licanten,
+  author = {Gironas, Jorge and Viollier, Eduardo and Cienfuegos, Rodrigo and Hora, Benedikt},
+  title  = {Zonificaci{\'o}n de la inundaci{\'o}n en {Licant{\'e}n} ({SHP}), evento 21--26 junio 2023, cuencas del {R{\'i}o} {Mataquito} y {R{\'i}o} {Maule}, {Regi{\'o}n} del {Maule}},
+  year   = {2024},
+  doi    = {10.5281/zenodo.13307972},
+  note   = {{CIGIDEN} post-disaster zonation shapefile, derived from {SENTINEL} via {DLR}}
+}
+
+@techreport{CIGIDEN2023MataquitoMaule,
+  author      = {Gironas, Jorge and Cienfuegos, Rodrigo and Hora, Benedikt and Viollier, Eduardo},
+  title       = {Informe post-desastres: {Inundaciones} 21--26 junio 2023, cuencas del {R{\'i}o} {Mataquito} y {R{\'i}o} {Maule} ({Regi{\'o}n} del {Maule})},
+  institution = {CIGIDEN (Centro de Investigaci{\'o}n para la Gesti{\'o}n Integrada del Riesgo de Desastres)},
+  year        = {2023},
+  url         = {https://www.cigiden.cl/informe-post-desastres-cigiden-inundaciones-21-26-junio-2023-cuencas-del-rio-mataquito-y-rio-maule-region-del-maule/}
+}
+
+% ---- Other DEM correction / validation work --------------------------------
+
+@article{Hawker2018Accuracy,
+  author  = {Hawker, Laurence and Bates, Paul and Neal, Jeffrey and Rougier, Jonathan},
+  title   = {Perspectives on digital elevation model ({DEM}) simulation for flood modeling in the absence of a high-accuracy open access global {DEM}},
+  journal = {Frontiers in Earth Science},
+  year    = {2018},
+  volume  = {6},
+  pages   = {233},
+  doi     = {10.3389/feart.2018.00233}
+}
+
+@article{Schumann2018DEMSurvey,
+  author  = {Schumann, Guy J.-P. and Bates, Paul D.},
+  title   = {The need for a high-accuracy, open-access global {DEM}},
+  journal = {Frontiers in Earth Science},
+  year    = {2018},
+  volume  = {6},
+  pages   = {225},
+  doi     = {10.3389/feart.2018.00225}
+}
+
+% ---- Sentinel data / Planetary Computer ------------------------------------
+
+@article{Drusch2012Sentinel2,
+  author  = {Drusch, Matthias and Del Bello, Umberto and Carlier, S{\'e}bastien and Colin, Olivier and Fernandez, Veronica and Gascon, Ferran and Hoersch, Bianca and Isola, Claudia and Laberinti, Paolo and Martimort, Philippe and Meygret, Aim{\'e} and Spoto, Fabrizio and Sy, Omar and Marchese, Francesco and Bargellini, Pierluigi},
+  title   = {{Sentinel-2}: {ESA's} optical high-resolution mission for {GMES} operational services},
+  journal = {Remote Sensing of Environment},
+  year    = {2012},
+  volume  = {120},
+  pages   = {25--36},
+  doi     = {10.1016/j.rse.2011.11.026}
+}
+
+@article{Torres2012Sentinel1,
+  author  = {Torres, Ramon and Snoeij, Paul and Geudtner, Dirk and Bibby, David and Davidson, Malcolm and Attema, Evert and Potin, Pierre and Rommen, Bj{\"o}rn and Floury, Nicolas and Brown, Mike and Traver, Ignacio Navas and Deghaye, Patrick and Duesmann, Berthyl and Rosich, Betlem and Miranda, Nuno and Bruno, Claudio and L'Abbate, Michele and Croci, Renato and Pietropaolo, Andrea and Huchler, Markus and Rostan, Friedhelm},
+  title   = {{GMES} {Sentinel-1} mission},
+  journal = {Remote Sensing of Environment},
+  year    = {2012},
+  volume  = {120},
+  pages   = {9--24},
+  doi     = {10.1016/j.rse.2011.05.028}
+}
+
+% ---- Author's own tool (cite if SurtGis is published as software paper) ----
+
+@misc{Fathom2024FABDEMPlus,
+  author       = {{Fathom}},
+  title        = {{FABDEM+}: globally consistent and accurate {DEM}},
+  year         = {2024},
+  url          = {https://www.fathom.global/product/global-terrain-data-fabdem/},
+  note         = {Commercial product; methodological details proprietary}
+}
+
+@misc{SurtGis2026,
+  author = {Parra Ortiz, Francisco},
+  title  = {{SurtGis}: high-performance geospatial analysis library and {CLI} in {Rust}},
+  year   = {2026},
+  url    = {https://github.com/franciscoparrao/surtgis},
+  note   = {136 algorithms, streaming I/O for arbitrarily large DEMs}
+}
+
+% ---- Tabular deep-learning baselines (Section 5.7) ------------------------
+
+@inproceedings{Grinsztajn2022TabularDL,
+  author    = {Grinsztajn, L{\'e}o and Oyallon, Edouard and Varoquaux, Ga{\"e}l},
+  title     = {Why do tree-based models still outperform deep learning on tabular data?},
+  booktitle = {Advances in Neural Information Processing Systems},
+  publisher = {Curran Associates, Inc.},
+  year      = {2022},
+  volume    = {35},
+  pages     = {507--520},
+  doi       = {10.48550/arXiv.2207.08815}
+}
+
+@article{ShwartzZiv2022TabularDL,
+  author  = {Shwartz-Ziv, Ravid and Armon, Amitai},
+  title   = {Tabular data: Deep learning is not all you need},
+  journal = {Information Fusion},
+  year    = {2022},
+  volume  = {81},
+  pages   = {84--90},
+  doi     = {10.1016/j.inffus.2021.11.011}
+}
+
+@inproceedings{Arik2021TabNet,
+  author  = {Ar{\i}k, Sercan {\"O}. and Pfister, Tomas},
+  title   = {{TabNet}: Attentive interpretable tabular learning},
+  booktitle = {Proceedings of the {AAAI} Conference on Artificial Intelligence},
+  year    = {2021},
+  volume  = {35},
+  number  = {8},
+  pages   = {6679--6687},
+  doi     = {10.1609/aaai.v35i8.16826}
+}

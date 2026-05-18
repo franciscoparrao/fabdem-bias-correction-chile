@@ -1,0 +1,35 @@
+\begin{table*}[t]
+\centering
+\caption{Per-tile performance of the Mediterranean-trained XGBoost model. Mediterranean rows (S35W071--S37W072) use \textbf{spatial-block out-of-fold} predictions (\SI{10}{\kilo\meter} blocks, $K=5$, Section~\ref{sec:spatial_cv}); humid temperate rows (S38W072--S39W073) and the non-Chilean OOD rows (N10E105 Vietnam Mekong Delta; S24W069 Atacama) are direct application of the Mediterranean-trained model with no retraining or fold leakage. $\Delta\%$ = $(\text{RMSE}_{\text{corr}} - \text{RMSE}_{\text{raw}}) / \text{RMSE}_{\text{raw}} \times 100$; \textbf{negative values indicate RMSE reduction (improvement); positive values indicate degradation}, matching the sign convention used throughout the main text.}
+\label{tab:per_tile}
+\footnotesize
+\begin{tabular}{llrrrrrrrr}
+\toprule
+\textbf{Tile} & \textbf{Regime} & \textbf{n} &
+\textbf{RMSE\textsubscript{raw}} & \textbf{RMSE\textsubscript{corr}} &
+\textbf{MAE\textsubscript{raw}} & \textbf{MAE\textsubscript{corr}} &
+\textbf{Bias\textsubscript{raw}} & \textbf{Bias\textsubscript{corr}} &
+\textbf{$\Delta$\%} \\
+& & & (m) & (m) & (m) & (m) & (m) & (m) & \\
+\midrule
+S35W071 & Med & 7,916 & 3.764 & 2.914 & 1.420 & 1.043 & +0.979 & +0.118 & $-22.6$ \\
+S35W072 & Med & 25,038 & 2.390 & 1.976 & 1.316 & 0.951 & +1.030 & +0.039 & $-17.3$ \\
+S36W071 & Med & 1,987 & 2.584 & 2.863 & 1.551 & 1.742 & +0.063 & $-0.458$ & $+10.8$ \\
+S36W072 & Med & 25,645 & 3.017 & 2.451 & 1.453 & 1.120 & +1.105 & +0.030 & $-18.8$ \\
+S37W071 & Med & 2,449 & 2.449 & 2.321 & 1.412 & 1.443 & $-0.149$ & $-0.479$ & $-5.2$ \\
+S37W072 & Med & 14,466 & 3.775 & 2.990 & 1.541 & 1.202 & +1.106 & $-0.014$ & $-20.8$ \\
+S38W072 & HT & 4,055 & 5.431 & 4.487 & 2.849 & 2.488 & +1.581 & +0.060 & $-17.4$ \\
+S38W073 & HT & 28,177 & 5.032 & 3.787 & 2.890 & 2.154 & +2.279 & +0.365 & $-24.7$ \\
+S39W072 & HT & 3,735 & 6.962 & 4.930 & 2.875 & 2.426 & +1.800 & +0.270 & $-29.2$ \\
+S39W073 & HT & 21,882 & 4.281 & 3.582 & 1.966 & 1.768 & +1.385 & $-0.164$ & $-16.3$ \\
+\addlinespace[2pt]
+N10E105 & TW & 20,569 & 1.091 & 1.154 & 0.537 & 0.616 & +0.297 & $-0.386$ & $+5.8$ \\
+S24W069 & HA & 20,681 & 0.605 & 0.934 & 0.301 & 0.457 & $-0.111$ & +0.076 & $+54.5$ \\
+\midrule
+\textit{Mediterranean total} & --- & 77,501 & 3.054 & 2.483 & 1.423 & 1.099 & +1.002 & +0.005 & $-18.7$ \\
+\textit{Humid temperate total} & --- & 57,849 & 4.946 & 3.850 & 2.536 & 2.049 & +1.861 & +0.137 & $-22.2$ \\
+\textit{Tropical wet (Vietnam)} & --- & 20,569 & 1.091 & 1.154 & 0.537 & 0.616 & +0.297 & $-0.386$ & $+5.8$ \\
+\textit{Hyperarid (Atacama)} & --- & 20,681 & 0.605 & 0.934 & 0.301 & 0.457 & $-0.111$ & +0.076 & $+54.5$ \\
+\bottomrule
+\end{tabular}
+\end{table*}

@@ -1,0 +1,30 @@
+\begin{table*}[t]
+\centering
+\caption{Per-tile performance of the Mediterranean-trained XGBoost model. Tiles S35W071--S37W072 are in-sample (Mediterranean regime, training data); tiles S38W072--S39W073 are out-of-distribution (humid temperate forest). Improvement (\%) = (RMSE\textsubscript{raw} $-$ RMSE\textsubscript{corr}) / RMSE\textsubscript{raw} $\times$ 100.}
+\label{tab:per_tile}
+\footnotesize
+\begin{tabular}{llrrrrrrrr}
+\toprule
+\textbf{Tile} & \textbf{Regime} & \textbf{n} &
+\textbf{RMSE\textsubscript{raw}} & \textbf{RMSE\textsubscript{corr}} &
+\textbf{MAE\textsubscript{raw}} & \textbf{MAE\textsubscript{corr}} &
+\textbf{Bias\textsubscript{raw}} & \textbf{Bias\textsubscript{corr}} &
+\textbf{$\Delta$\%} \\
+& & & (m) & (m) & (m) & (m) & (m) & (m) & \\
+\midrule
+S35W071 & Med & 7,916 & 3.764 & 1.544 & 1.420 & 0.747 & +0.979 & +0.031 & +59.0 \\
+S35W072 & Med & 25,038 & 2.390 & 1.434 & 1.316 & 0.758 & +1.030 & +0.062 & +40.0 \\
+S36W071 & Med & 1,987 & 2.584 & 1.676 & 1.551 & 1.130 & +0.063 & -0.226 & +35.1 \\
+S36W072 & Med & 25,645 & 3.017 & 1.759 & 1.453 & 0.890 & +1.105 & +0.019 & +41.7 \\
+S37W071 & Med & 2,449 & 2.449 & 1.476 & 1.412 & 1.021 & -0.149 & -0.326 & +39.7 \\
+S37W072 & Med & 14,466 & 3.775 & 1.929 & 1.541 & 0.882 & +1.106 & -0.069 & +48.9 \\
+S38W072 & HT & 4,055 & 5.431 & 4.487 & 2.849 & 2.488 & +1.581 & +0.060 & +17.4 \\
+S38W073 & HT & 28,177 & 5.032 & 3.787 & 2.890 & 2.154 & +2.279 & +0.365 & +24.7 \\
+S39W072 & HT & 3,735 & 6.962 & 4.930 & 2.875 & 2.426 & +1.800 & +0.270 & +29.2 \\
+S39W073 & HT & 21,882 & 4.281 & 3.582 & 1.966 & 1.768 & +1.385 & -0.164 & +16.3 \\
+\midrule
+\textit{Mediterranean total} & --- & 77,501 & 3.054 & 1.664 & 1.423 & 0.842 & +1.002 & +0.001 & +45.5 \\
+\textit{Humid temperate total} & --- & 57,849 & 4.946 & 3.850 & 2.536 & 2.049 & +1.861 & +0.137 & +22.2 \\
+\bottomrule
+\end{tabular}
+\end{table*}

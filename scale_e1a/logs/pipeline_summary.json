@@ -1,0 +1,10 @@
+{
+  "pipeline_elapsed_s": 1862.1,
+  "max_ram_per_stage_gb": {
+    "03_satellite": 5.212688384,
+    "04_atl08": 0.135401472,
+    "05_extract": 0.0,
+    "06_sample": 0.20441088,
+    "07_train": 0.50460672
+  }
+}

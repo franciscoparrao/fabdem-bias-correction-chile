@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software or the corrected DEM data, please cite the accompanying paper."
+type: software
+title: "FABDEM bias correction pipeline using ICESat-2 ATL08 and XGBoost over central-south Chile"
+authors:
+  - family-names: "Parra Ortiz"
+    given-names: "Francisco"
+    affiliation: "Universidad de Santiago de Chile (USACH)"
+    email: "francisco.parra.o@usach.cl"
+license: MIT
+repository-code: "https://github.com/franciscoparrao/fabdem-bias-correction-chile"
+date-released: 2026-05-17
+preferred-citation:
+  type: article
+  title: "Stratified machine-learning bias correction of FABDEM transfers between contrasting Chilean climate regimes: evidence from ICESat-2 over Mediterranean and humid temperate watersheds"
+  authors:
+    - family-names: "Parra Ortiz"
+      given-names: "Francisco"
+      affiliation: "Universidad de Santiago de Chile"
+  journal: "ISPRS Journal of Photogrammetry and Remote Sensing"
+  year: 2026
+  status: "submitted"

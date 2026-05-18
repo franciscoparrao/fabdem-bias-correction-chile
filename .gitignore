@@ -1,0 +1,79 @@
+# =========================================================================
+# Raw per-tile pipeline outputs (16+ GB, regeneratable from steps/01-06)
+# These are downstream of FABDEM + Sentinel-1/2 + ATL08 downloads and are
+# distributed via Zenodo (see README §Reproducibility) rather than git.
+# =========================================================================
+scale_*/tiles/*/dem/
+scale_*/tiles/*/satellite/
+scale_*/tiles/*/factors/
+scale_*/tiles/*/hydro/
+scale_*/tiles/*/icesat2/
+scale_*/tiles/*/samples/atl08_*.csv
+scale_*/tiles/*/samples/tile_samples.csv
+scale_*/tiles/*/logs/
+scale_*/tiles/*/status/
+pilot_*/tiles/
+pilot_teno/factors/
+pilot_teno/hydro/
+pilot_teno/dem/
+pilot_teno/satellite/
+pilot_teno/icesat2/
+pilot_teno/samples/*.csv
+scale_e1a/samples/*.csv
+scale_e1a/factors/
+scale_e1a/hydro/
+scale_e1a/satellite/
+scale_e1a/dem/
+scale_e1a/icesat2/
+p2_validation/cache/
+p2_validation/downloads/
+p2_validation/hand_compare/*.tif
+p2_validation/hand_compare/hydro_corrected/
+p2_validation/hand_compare/hydro_raw/
+
+# All HDF5 ICESat-2 granules anywhere
+**/*.h5
+
+# Big inference rasters (282 MB COG → Zenodo)
+*/inference/*.tif
+*/inference/*.tiff
+
+# Big training tables (35-41 MB CSV → Zenodo Parquet)
+**/samples_unified/samples_*.csv
+**/samples_unified/*_predictions.csv
+**/samples_unified/strat_*.csv
+**/samples/*_full.csv
+pilot_*/samples/*.csv
+
+# Trained XGBoost model (17 MB → Zenodo)
+**/xgb_mm_booster.json
+**/xgb_mm_sklearn.joblib
+**/*.joblib
+
+# Zenodo prep area (local staging)
+zenodo_uploads/
+
+# LaTeX build artefacts
+paper/**/*.aux
+paper/**/*.bbl
+paper/**/*.blg
+paper/**/*.log
+paper/**/*.out
+paper/**/*.toc
+paper/**/*.synctex.gz
+paper/**/main.pdf
+paper/isprs/main.pdf
+
+# Python / IDE
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+.venv/
+.env
+
+# Logs and tmp
+*.log
+/tmp/
+*.tmp
+**/run_*.log
