@@ -37,6 +37,11 @@ p2_validation/hand_compare/hydro_raw/
 # Big inference rasters (282 MB COG → Zenodo)
 */inference/*.tif
 */inference/*.tiff
+*/inference/*.aux.xml
+
+# Journal-supplied guidelines (not for public repo)
+ISPRS_guideline.pdf
+*_guideline*.pdf
 
 # Big training tables (35-41 MB CSV → Zenodo Parquet)
 **/samples_unified/samples_*.csv

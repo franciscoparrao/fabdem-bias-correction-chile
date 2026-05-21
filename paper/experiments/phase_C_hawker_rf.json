@@ -1,0 +1,19 @@
+{
+  "baseline_rmse": 3.0537555867261847,
+  "rf_oof_rmse": 2.510065214353643,
+  "rf_oof_mae": 1.1058995565113419,
+  "rf_best_params": {
+    "n_estimators": 244,
+    "max_depth": 15,
+    "min_samples_split": 2,
+    "min_samples_leaf": 4,
+    "max_features": 0.5
+  },
+  "xgboost_oof_rmse_ref": 2.483180756453067,
+  "xgboost_oof_mae_ref": 1.0989095719282178,
+  "delta_pct_vs_raw_rf": -17.80399108349767,
+  "delta_pct_vs_raw_xgboost": -18.684364680436314,
+  "delta_pct_rf_vs_xgboost": 1.0826621393030338,
+  "n_optuna_trials": 50,
+  "wall_time_s": 12571.820267915726
+}

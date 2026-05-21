@@ -1,6 +1,6 @@
 \begin{table*}[t]
 \centering
-\caption{Per-tile performance of the Mediterranean-trained XGBoost model. Mediterranean rows (S35W071--S37W072) use \textbf{spatial-block out-of-fold} predictions (\SI{10}{\kilo\meter} blocks, $K=5$, Section~\ref{sec:spatial_cv}); humid temperate rows (S38W072--S39W073) and the non-Chilean OOD rows (N10E105 Vietnam Mekong Delta; S24W069 Atacama) are direct application of the Mediterranean-trained model with no retraining or fold leakage. $\Delta\%$ = $(\text{RMSE}_{\text{corr}} - \text{RMSE}_{\text{raw}}) / \text{RMSE}_{\text{raw}} \times 100$; \textbf{negative values indicate RMSE reduction (improvement); positive values indicate degradation}, matching the sign convention used throughout the main text.}
+\caption{Per-tile performance of the Mediterranean-trained XGBoost model. Mediterranean rows (S35W071--S37W072) use \textbf{spatial-block out-of-fold} predictions (\SI{10}{\kilo\meter} blocks, $K=5$, Section~\ref{sec:spatial_cv}); humid temperate Chile rows (S38W072--S39W073) and the seven non-Chilean OOD rows are direct application of the Mediterranean-trained model with no retraining or fold leakage. The non-Chilean OOD set comprises: N10E105 Vietnam Mekong Delta (TW, tropical wet, falsifying); S24W069 Chilean Atacama (HA, hyperarid, falsifying); and the four-site tropical montane Andean panel (TMA) confirmatory of the relief--canopy pre-conditions: S13W072 Cusco--Vilcanota Peru, N04W074 Boyac\'a Colombia, S01W079 Pichincha--Cotopaxi Ecuador, S16W068 La Paz Yungas Bolivia. $\Delta\%$ = $(\text{RMSE}_{\text{corr}} - \text{RMSE}_{\text{raw}}) / \text{RMSE}_{\text{raw}} \times 100$; \textbf{negative values indicate RMSE reduction (improvement); positive values indicate degradation}, matching the sign convention used throughout the main text.}
 \label{tab:per_tile}
 \footnotesize
 \begin{tabular}{llrrrrrrrr}
@@ -25,9 +25,14 @@ S39W073 & HT & 21,882 & 4.281 & 3.582 & 1.966 & 1.768 & +1.385 & $-0.164$ & $-16
 \addlinespace[2pt]
 N10E105 & TW & 20,569 & 1.091 & 1.154 & 0.537 & 0.616 & +0.297 & $-0.386$ & $+5.8$ \\
 S24W069 & HA & 20,681 & 0.605 & 0.934 & 0.301 & 0.457 & $-0.111$ & +0.076 & $+54.5$ \\
+S13W072 & TMA &  147 & 11.854 & 10.766 & 5.169 & 4.802 & +4.155 & +2.003 & $-9.2$ \\
+N04W074 & TMA & 4,005 & 3.510 & 2.754 & 1.933 & 1.576 & +1.502 & +0.225 & $-21.5$ \\
+S01W079 & TMA &   68 & 7.168 & 6.629 & 3.496 & 3.220 & +3.082 & +2.229 & $-7.5$ \\
+S16W068 & TMA & 1,088 & 10.967 & 10.308 & 5.349 & 4.552 & +2.958 & +0.610 & $-6.0$ \\
 \midrule
 \textit{Mediterranean total} & --- & 77,501 & 3.054 & 2.483 & 1.423 & 1.099 & +1.002 & +0.005 & $-18.7$ \\
 \textit{Humid temperate total} & --- & 57,849 & 4.946 & 3.850 & 2.536 & 2.049 & +1.861 & +0.137 & $-22.2$ \\
+\textit{Tropical montane Andes (4 sites)} & --- & 5,308 & 5.226 & 4.460 & 2.418 & 2.025 & +1.870 & +0.353 & $-14.7$ \\
 \textit{Tropical wet (Vietnam)} & --- & 20,569 & 1.091 & 1.154 & 0.537 & 0.616 & +0.297 & $-0.386$ & $+5.8$ \\
 \textit{Hyperarid (Atacama)} & --- & 20,681 & 0.605 & 0.934 & 0.301 & 0.457 & $-0.111$ & +0.076 & $+54.5$ \\
 \bottomrule

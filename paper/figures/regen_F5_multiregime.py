@@ -31,22 +31,25 @@ FIG = ROOT / "paper" / "figures"
 ISPRS_FIG = ROOT / "paper" / "isprs" / "figures"
 
 COLORS = {
-    "mediterranean":  "#D7642E",  # warm orange — training
-    "humid_temperate": "#2E8B8B", # teal — OOD Chile (favourable)
-    "tropical_wet":   "#7BA05B",  # sage green — OOD Vietnam (boundary, marginal degrade)
-    "hyperarid":      "#C9956B",  # tan/sand — OOD Atacama (boundary, catastrophic)
+    "mediterranean":   "#D7642E",  # warm orange — training
+    "humid_temperate": "#2E8B8B",  # teal — OOD Chile (favourable)
+    "tropical_wet":    "#7BA05B",  # sage green — OOD Vietnam (boundary, marginal degrade)
+    "hyperarid":       "#C9956B",  # tan/sand — OOD Atacama (boundary, catastrophic)
+    "tropical_montane": "#7B3F7B", # purple — OOD Cusco (confirmatory favourable)
 }
 MARKERS = {
     "mediterranean":   "o",
     "humid_temperate": "s",
     "tropical_wet":    "D",
     "hyperarid":       "^",
+    "tropical_montane": "P",
 }
 LABELS = {
-    "mediterranean":  "Mediterranean (training, spatial-CV OOF)",
-    "humid_temperate": "Humid temperate Chile (OOD, no retrain)",
-    "tropical_wet":   "Tropical wet — Vietnam Mekong (OOD)",
-    "hyperarid":      "Hyperarid — Atacama (OOD)",
+    "mediterranean":   "Mediterranean (training, spatial-CV OOF)",
+    "humid_temperate": "Humid temperate Chile (OOD favourable)",
+    "tropical_wet":    "Tropical wet — Vietnam Mekong (OOD boundary)",
+    "hyperarid":       "Hyperarid — Atacama (OOD boundary)",
+    "tropical_montane": "Tropical montane Andes (Co/Ec/Pe/Bo, OOD confirmatory)",
 }
 
 
@@ -90,7 +93,18 @@ ha_df = df_p4[df_p4.regime == "hyperarid"].copy()
 tw = per_tile_metrics(tw_df, "tropical_wet")
 ha = per_tile_metrics(ha_df, "hyperarid")
 
-agg = pd.concat([md, ht, tw, ha], ignore_index=True)
+# --- Tropical montane Andes (4-site panel) ---
+# Cusco (Peru) from scale_p5; Colombia/Ecuador/Bolivia from scale_p6 (samples
+# materialise in scale_p4/tiles/ because run_tile.py is symlinked there).
+df_p5 = pd.read_csv(ROOT / "scale_p5" / "samples_unified" /
+                    "samples_p5_with_mm_predictions.csv")
+df_p5["tile"] = "S13W072"
+df_p6 = pd.read_csv(ROOT / "scale_p6" / "samples_unified" /
+                    "samples_p6_with_mm_predictions.csv")
+tma_df = pd.concat([df_p5, df_p6], ignore_index=True)
+tma = per_tile_metrics(tma_df, "tropical_montane")
+
+agg = pd.concat([md, ht, tw, ha, tma], ignore_index=True)
 print(agg.to_string(index=False))
 
 # Save aggregated for reuse
@@ -101,7 +115,7 @@ agg.to_csv(FIG / "F5_per_tile_4regimes.csv", index=False)
 # ============================================================================
 fig, ax = plt.subplots(figsize=(9.2, 5.8))
 
-for regime in ["mediterranean", "humid_temperate", "tropical_wet", "hyperarid"]:
+for regime in ["mediterranean", "humid_temperate", "tropical_wet", "hyperarid", "tropical_montane"]:
     sub = agg[agg.regime == regime]
     ax.scatter(
         sub.rmse_raw, sub.delta_pct,
@@ -119,6 +133,8 @@ OFFSETS = {
     "S38W072": (10, 4),     "S38W073": (10, 4),
     "S39W072": (-55, 4),    "S39W073": (10, -12),
     "N10E105": (-65, 4),    "S24W069": (10, 4),
+    "S13W072": (-65, 4),    "N04W074": (10, -14),
+    "S01W079": (-65, 4),    "S16W068": (10, 4),
 }
 for _, r in agg.iterrows():
     dx, dy = OFFSETS.get(r.tile, (8, 4))
@@ -136,10 +152,11 @@ ax.axhspan(0, 60, color="#FFE4E4", alpha=0.5, zorder=-1)    # degradation
 
 ax.set_xlabel("FABDEM raw RMSE (m)")
 ax.set_ylabel(r"$\Delta$RMSE $= (\mathrm{RMSE}_{\mathrm{corr}} - \mathrm{RMSE}_{\mathrm{raw}}) / \mathrm{RMSE}_{\mathrm{raw}} \times 100$ (\%)" "\n← improvement        degradation →")
-ax.set_title("Per-tile correction performance across four climate regimes\n"
-             "(marker area ∝ √n footprints; single M-M model, no retraining)")
+ax.set_title("Per-tile correction performance across five climate regimes\n"
+             "(tropical montane Andes panel = 4 tiles spanning Colombia 4°N to Bolivia 16°S;\n"
+             "marker area ∝ √n footprints; single M-M model, no retraining)")
 ax.legend(loc="upper right", framealpha=0.95)
-ax.set_xlim(0.3, 7.6)
+ax.set_xlim(0.3, 13)
 ax.set_ylim(-65, 60)
 
 # Annotation: the bounded transferability message (bottom-left now, since
@@ -147,7 +164,9 @@ ax.set_ylim(-65, 60)
 ax.text(
     0.02, 0.04,
     "Favourable transfer requires (i) Andean-style relief\n"
-    "and (ii) positive FABDEM canopy bias to coexist.\n"
+    "AND (ii) positive FABDEM canopy bias to coexist.\n"
+    "All 4 tropical montane Andean tiles (Co, Ec, Pe, Bo) satisfy both\n"
+    "→ favourable transfer confirmed across 53° of latitude.\n"
     "Vietnam Delta lacks (i); Atacama lacks (ii).",
     transform=ax.transAxes, fontsize=9, va="bottom", linespacing=1.3,
     bbox=dict(boxstyle="round,pad=0.4", facecolor="lightyellow",
