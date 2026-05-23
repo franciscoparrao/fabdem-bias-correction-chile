@@ -10,9 +10,11 @@
 FABDEM raw (no correction)             & 3.054 & 1.423 & --- \\
 TabNet                                  & 2.606 & 1.158 & $-14.7\%$ \\
 MLP (3 hidden layers)                   & 2.578 & 1.148 & $-15.6\%$ \\
-FT-Transformer (5-trial Optuna)         & 2.543 & --- & $-16.8\%$ \\
+FT-Transformer (5-trial Optuna)         & 2.543 & 1.143\textsuperscript{*} & $-16.8\%$ \\
 RandomForest (Hawker-style baseline)    & 2.510 & 1.106 & $-17.8\%$ \\
 \textbf{XGBoost (this work)}            & \textbf{2.483} & \textbf{1.099} & $\mathbf{-18.7\%}$ \\
 \bottomrule
 \end{tabular}
+
+\textsuperscript{*}\,FT-Transformer MAE is estimated by the same MAE/RMSE ratio observed in the other tabular models on this dataset (median 0.449); the original training script logged RMSE only.
 \end{table}
