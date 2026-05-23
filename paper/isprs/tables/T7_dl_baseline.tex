@@ -1,17 +1,18 @@
 \begin{table}[t]
 \centering
-\caption{XGBoost against alternative learners on the identical spatial-CV folds (\SI{10}{\kilo\meter} blocks, $K = 5$, $n = 77{,}501$, 33 features). \textbf{RandomForest} (Hawker-style baseline; sklearn): 25 Optuna trials over $n_{\text{estimators}} \in [100, 300]$, $\text{max\_depth} \in [6, 15]$, $\text{max\_features} \in \{\text{sqrt}, 0.5\}$; best $n_{\text{estimators}} = 244$, $\text{max\_depth} = 15$. \textbf{MLP}: three hidden layers (256-256-128), ReLU, dropout 0.2, AdamW lr~$=10^{-3}$, batch 2048. \textbf{TabNet} \citep{Arik2021TabNet}: $n_d = n_a = 32$, $n_{\text{steps}} = 4$, $\gamma = 1.3$, Adam lr~$=2 \times 10^{-2}$, batch 4096. Median-imputed inputs for RF (sklearn does not handle NaN natively); XGBoost routes NaNs internally. DL baselines use early stopping (patience 20). $\Delta\%$ negative = RMSE reduction (improvement). XGBoost edges RandomForest by only \SI{1.1}{\percent} RMSE and clearly outperforms the DL baselines; the small XGB--RF margin suggests that the principal contribution of the present work is the \emph{regional re-training} on Chilean ATL08 ground truth rather than the choice of gradient-boosted vs random-forest learner.}
+\caption{XGBoost against alternative learners on the identical spatial-CV folds (\SI{10}{\kilo\meter} blocks, $K = 5$, $n = 77{,}501$, 33 features). \textbf{RandomForest} (Hawker-style baseline; sklearn): 25 Optuna trials over $n_{\text{estimators}} \in [100, 300]$, $\text{max\_depth} \in [6, 15]$, $\text{max\_features} \in \{\text{sqrt}, 0.5\}$; best $n_{\text{estimators}} = 244$, $\text{max\_depth} = 15$. \textbf{FT-Transformer} \citep{Gorishniy2021TabularDL}: feature-tokeniser transformer (rtdl-revisiting-models v0.0.2); exploratory 5-trial Optuna sweep over $n_{\text{blocks}}$, $d_{\text{block}}$, attention heads, dropouts, learning rate, weight decay. CPU-only training averaged $\sim$2~h per trial; of 15 Optuna trials attempted, the last 10 terminated silently (likely OOM during k-fold training without graceful recovery in the Optuna driver), and we therefore report the best of the 5 successful trials. This is an exploratory benchmark rather than a fully tuned comparison; an aggressive search on GPU would likely improve the result by a small amount but is not expected to overturn the tree-learner advantage. \textbf{MLP}: three hidden layers (256-256-128), ReLU, dropout 0.2, AdamW lr~$=10^{-3}$, batch 2048. \textbf{TabNet} \citep{Arik2021TabNet}: $n_d = n_a = 32$, $n_{\text{steps}} = 4$, $\gamma = 1.3$, Adam lr~$=2 \times 10^{-2}$, batch 4096. Median-imputed inputs for non-XGBoost learners; XGBoost routes NaNs natively. $\Delta\%$ negative = RMSE reduction (improvement). XGBoost edges RandomForest by only \SI{1.1}{\percent} RMSE and the two tree-based learners together dominate all three deep-learning baselines (FT-Transformer, MLP, TabNet); the joint dominance of gradient-boosted/random-forest learners supports the interpretation that the principal contribution of the present work is the \emph{regional re-training} on Chilean ATL08 ground truth rather than the choice of any single learner.}
 \label{tab:dl_baseline}
 \footnotesize
 \begin{tabular}{lrrr}
 \toprule
 \textbf{Model} & \textbf{RMSE (m)} & \textbf{MAE (m)} & \textbf{$\Delta$\% vs raw} \\
 \midrule
-FABDEM raw (no correction)        & 3.054 & 1.423 & --- \\
-TabNet                             & 2.606 & 1.158 & $-14.7\%$ \\
-MLP (3 hidden layers)              & 2.578 & 1.148 & $-15.6\%$ \\
-RandomForest (Hawker-style baseline)& 2.510 & 1.106 & $-17.8\%$ \\
-\textbf{XGBoost (this work)}       & \textbf{2.483} & \textbf{1.099} & $\mathbf{-18.7\%}$ \\
+FABDEM raw (no correction)             & 3.054 & 1.423 & --- \\
+TabNet                                  & 2.606 & 1.158 & $-14.7\%$ \\
+MLP (3 hidden layers)                   & 2.578 & 1.148 & $-15.6\%$ \\
+FT-Transformer (5-trial Optuna)         & 2.543 & --- & $-16.8\%$ \\
+RandomForest (Hawker-style baseline)    & 2.510 & 1.106 & $-17.8\%$ \\
+\textbf{XGBoost (this work)}            & \textbf{2.483} & \textbf{1.099} & $\mathbf{-18.7\%}$ \\
 \bottomrule
 \end{tabular}
 \end{table}

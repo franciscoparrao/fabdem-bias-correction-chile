@@ -1,0 +1,39 @@
+{
+  "_note": "Run terminated after trial 5 (silent failure in Optuna study at trial 6+, possibly OOM on CPU). Reported as exploratory 5-trial Optuna sweep due to compute constraint (CPU-only training of FT-Transformer is ~2-2.5 h/trial). Best params not captured in log output; final RMSE is the minimum across the 5 logged trials.",
+  "model": "FTTransformer",
+  "library": "rtdl_revisiting_models v0.0.2",
+  "device": "cpu",
+  "n_trials_completed": 5,
+  "n_trials_planned": 15,
+  "best_rmse": 2.5425,
+  "trial_history": [
+    {"trial": 1, "rmse": 2.5425, "elapsed_min": 94.8},
+    {"trial": 2, "rmse": 2.5602, "elapsed_min": 242.7},
+    {"trial": 3, "rmse": 2.5552, "elapsed_min": 399.8},
+    {"trial": 4, "rmse": 2.6534, "elapsed_min": 526.0},
+    {"trial": 5, "rmse": 2.5605, "elapsed_min": 616.8}
+  ],
+  "xgboost_ref_rmse": 2.483180756453067,
+  "rf_ref_rmse": 2.510065214353643,
+  "delta_pct_vs_xgboost": 2.39,
+  "delta_pct_vs_raw_ftt": -16.81,
+  "comparison_summary": "FT-Transformer sits between RF (2.510) and MLP (2.578); 2.4% worse than XGBoost. Reinforces 'regional re-training is main contribution, gradient-boosted/RF dominate tabular SR-DEM at this scale' framing.",
+  "wall_time_h": 10.3,
+  "search_space": {
+    "n_blocks": [2, 3],
+    "d_block": [64, 128],
+    "attention_n_heads": [4, 8],
+    "attention_dropout": "uniform(0, 0.3)",
+    "ffn_d_hidden_multiplier": "locked at 4/3 (rtdl default)",
+    "ffn_dropout": "uniform(0, 0.3)",
+    "lr": "log-uniform(1e-4, 1e-3)",
+    "weight_decay": "log-uniform(1e-6, 1e-3)",
+    "batch": [2048, 4096]
+  },
+  "training": {
+    "max_epochs": 30,
+    "patience": 5,
+    "seed": 42,
+    "imputation": "median per feature column"
+  }
+}

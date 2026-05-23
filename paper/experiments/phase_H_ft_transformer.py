@@ -39,7 +39,7 @@ SAMP = ROOT / "scale_p1" / "samples_unified"
 OUT = ROOT / "paper" / "experiments"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 SEED = 42
-N_TRIALS = 50
+N_TRIALS = 15  # reduced from 50 (CPU constraint: ~1-2h/trial → ~24h total)
 
 
 def load_data():
@@ -68,7 +68,7 @@ def get_splits(df):
                           groups=blocks))
 
 
-def train_fold(X_tr, y_tr, X_te, params, n_features, max_epochs=80, patience=10):
+def train_fold(X_tr, y_tr, X_te, params, n_features, max_epochs=30, patience=5):
     torch.manual_seed(SEED)
     np.random.seed(SEED)
     sc = StandardScaler().fit(X_tr)
@@ -133,17 +133,19 @@ def train_fold(X_tr, y_tr, X_te, params, n_features, max_epochs=80, patience=10)
 
 
 def objective(trial, df, FEATURES, splits):
+    # Reduced search space to keep per-trial time tractable on CPU. d_block
+    # capped at 128, batch ≥ 2048 (larger batches train faster per epoch on
+    # this CPU). Keep architecture diversity via n_blocks and n_heads.
     params = {
-        "n_blocks": trial.suggest_int("n_blocks", 2, 4),
-        "d_block": trial.suggest_categorical("d_block", [64, 128, 192]),
+        "n_blocks": trial.suggest_int("n_blocks", 2, 3),
+        "d_block": trial.suggest_categorical("d_block", [64, 128]),
         "attention_n_heads": trial.suggest_categorical("attention_n_heads", [4, 8]),
-        "attention_dropout": trial.suggest_float("attention_dropout", 0.0, 0.5),
-        "ffn_d_hidden_multiplier": trial.suggest_categorical(
-            "ffn_d_hidden_multiplier", [2.0, 4.0/3.0]),
-        "ffn_dropout": trial.suggest_float("ffn_dropout", 0.0, 0.5),
-        "lr": trial.suggest_float("lr", 1e-5, 1e-3, log=True),
+        "attention_dropout": trial.suggest_float("attention_dropout", 0.0, 0.3),
+        "ffn_d_hidden_multiplier": 4.0 / 3.0,  # locked: rtdl default
+        "ffn_dropout": trial.suggest_float("ffn_dropout", 0.0, 0.3),
+        "lr": trial.suggest_float("lr", 1e-4, 1e-3, log=True),
         "weight_decay": trial.suggest_float("weight_decay", 1e-6, 1e-3, log=True),
-        "batch": trial.suggest_categorical("batch", [512, 1024, 2048]),
+        "batch": trial.suggest_categorical("batch", [2048, 4096]),
     }
     # d_block must be divisible by n_heads
     if params["d_block"] % params["attention_n_heads"] != 0:
