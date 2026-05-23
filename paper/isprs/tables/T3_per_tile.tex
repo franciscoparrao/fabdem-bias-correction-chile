@@ -3,6 +3,7 @@
 \caption{Per-tile performance of the Mediterranean-trained XGBoost model. Mediterranean rows (S35W071--S37W072) use \textbf{spatial-block out-of-fold} predictions (\SI{10}{\kilo\meter} blocks, $K=5$, Section~\ref{sec:spatial_cv}); humid temperate Chile rows (S38W072--S39W073) and the seven non-Chilean OOD rows are direct application of the Mediterranean-trained model with no retraining or fold leakage. The non-Chilean OOD set comprises: N10E105 Vietnam Mekong Delta (TW, tropical wet, falsifying); S24W069 Chilean Atacama (HA, hyperarid, falsifying); and the four-site tropical montane Andean panel (TMA) confirmatory of the relief--canopy pre-conditions: S13W072 Cusco--Vilcanota Peru, N04W074 Boyac\'a Colombia, S01W079 Pichincha--Cotopaxi Ecuador, S16W068 La Paz Yungas Bolivia. $\Delta\%$ = $(\text{RMSE}_{\text{corr}} - \text{RMSE}_{\text{raw}}) / \text{RMSE}_{\text{raw}} \times 100$; \textbf{negative values indicate RMSE reduction (improvement); positive values indicate degradation}, matching the sign convention used throughout the main text.}
 \label{tab:per_tile}
 \footnotesize
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{llrrrrrrrr}
 \toprule
 \textbf{Tile} & \textbf{Regime} & \textbf{n} &
@@ -36,5 +37,6 @@ S16W068 & TMA & 1,088 & 10.967 & 10.308 & 5.349 & 4.552 & +2.958 & +0.610 & $-6.
 \textit{Tropical wet (Vietnam)} & --- & 20,569 & 1.091 & 1.154 & 0.537 & 0.616 & +0.297 & $-0.386$ & $+5.8$ \\
 \textit{Hyperarid (Atacama)} & --- & 20,681 & 0.605 & 0.934 & 0.301 & 0.457 & $-0.111$ & +0.076 & $+54.5$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table*}

@@ -3,6 +3,7 @@
 \caption{Stratified performance on the Mediterranean dataset (spatial-CV out-of-fold predictions, $n=77{,}501$ footprints). $\Delta\% = (\text{RMSE}_{\text{corr}} - \text{RMSE}_{\text{raw}})/\text{RMSE}_{\text{raw}} \times 100$, matching the sign convention used throughout the main text: \textbf{negative values indicate RMSE reduction (improvement); positive values indicate degradation}. RMSE improvement is largest in dense vegetation, alpine terrain, and intermediate HAND bands; smaller in floodplains where FABDEM is already accurate; near-zero or worsened in sample-sparse flat strata. The raw bias (FABDEM $-$ ICESat-2 orthometric) is positive across most strata and near zero post-correction, with mild negative bias in the alpine 2{,}000--\SI{3000}{\meter} band, valley/footslope geomorphons, and the S37W071 tile.}
 \label{tab:stratification}
 \footnotesize
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{llrrrrrr}
 \toprule
 \textbf{Dimension} & \textbf{Stratum} & \textbf{n} &
@@ -46,5 +47,6 @@ Tile & S36W072 & 25,645 & 3.017 & 2.451 & $-18.8$\,\% & +1.105 & +0.030 \\
  & S37W071 & 2,449 & 2.449 & 2.321 & $-5.2$\,\% & $-0.149$ & $-0.479$ \\
  & S36W071 & 1,987 & 2.584 & 2.863 & $+10.8$\,\% & +0.063 & $-0.458$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table*}

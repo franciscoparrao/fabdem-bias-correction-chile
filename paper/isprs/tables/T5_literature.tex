@@ -3,6 +3,7 @@
 \caption{Comparison with related work on FABDEM-family bias correction and evaluation. Our work is the first published, open, regional ML correction of FABDEM with ICESat-2 ATL08 as ground truth, and the first to demonstrate cross-regime transferability.}
 \label{tab:literature}
 \footnotesize
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{p{2.7cm}p{2.6cm}p{3.5cm}rrlp{2.7cm}p{2.2cm}}
 \toprule
 \textbf{Study} & \textbf{Region} & \textbf{Method} & \textbf{RMSE\textsubscript{baseline} (m)} & \textbf{RMSE\textsubscript{post} (m)} & \textbf{$\Delta$} & \textbf{Validation} & \textbf{Openness} \\
@@ -14,5 +15,6 @@ FABDEM+ (Fathom, 2024) & Global commercial & Proprietary FABDEM enhancement + lo
 \textbf{This study (M-M)} & Chile 34--37$^{\circ}$S (Mediterranean) & XGBoost residual correction, ICESat-2 ATL08 & \textbf{3.054} & \textbf{2.483} & \textbf{$-$18.7\%} & Spatial-block CV (10~km, K=5) & \textbf{All open} \\
 \textbf{This study (OOD)} & Chile 37--39$^{\circ}$S (humid temperate) & Same M-M-trained model, no retrain & \textbf{4.946} & \textbf{3.850} & \textbf{$-$22.2\%} & Held-out, different climate & \textbf{All open} \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table*}

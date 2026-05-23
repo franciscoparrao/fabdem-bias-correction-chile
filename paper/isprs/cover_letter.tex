@@ -1,0 +1,33 @@
+\documentclass[11pt]{letter}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{hyperref}
+
+\signature{Francisco Parra Ortiz\\Universidad de Santiago de Chile (USACH)\\Santiago, Chile\\francisco.parra.o@usach.cl}
+
+\address{}
+
+\begin{document}
+
+\begin{letter}{Editor-in-Chief\\ISPRS Journal of Photogrammetry and Remote Sensing}
+
+\opening{Dear Editor,}
+
+I am submitting the manuscript entitled \textbf{``Stratified machine-learning bias correction of FABDEM transfers between contrasting Chilean climate regimes: evidence from ICESat-2 over Mediterranean and humid temperate watersheds''} for consideration as a Research Article in the \textit{ISPRS Journal of Photogrammetry and Remote Sensing}.
+
+\textbf{The problem.} FABDEM v1.2 is the most accurate publicly available 30~m bare-earth DEM, achieving a global aggregate vertical RMSE near 2.5~m after a single global random-forest correction is applied to the upstream Copernicus DSM. Two practically important questions, however, remain only partially addressed in the literature: (i) does FABDEM's residual error have a regionally learnable structure that targeted, region-specific correction can exploit, and (ii) if so, does such a regional correction transfer between distinct climate regimes without retraining? Validating either question at the spatial and statistical scale needed has historically been bottlenecked by access to high-precision ground-truth elevation.
+
+\textbf{Contribution and headline results.} This paper exploits 135{,}350 ICESat-2 ATL08 v7 ground-classified footprints over central-south Chile (34--39$^{\circ}$S) as a cm-precision satellite-LiDAR ground truth, and trains an XGBoost residual correction on a 33-feature stack (geomorphometric, hydrological and Sentinel-1/2 derived). Under spatial-block cross-validation ($K=5$, 10~km blocks) the correction reduces RMSE from \textbf{3.054~m to 2.483~m} on the Mediterranean training regime ($-18.7\%$; block-bootstrap CI $[-20.9, -16.6]\%$; Diebold--Mariano $p<0.001$), with stratified gains reaching $-41.6\%$ in dense vegetation and $-33.8\%$ above 3000~m. Critically, a Hawker-style RandomForest re-trained on the same Chilean ATL08 data reaches 2.510~m, \textbf{within 1.1\% of XGBoost}: the principal source of the gain is the regional re-training on local ground truth rather than the choice of learner. A FT-Transformer benchmark trails the tree-based learners; the broader tabular-DL literature predicts this ordering at the relevant sample size.
+
+\textbf{Bounded cross-regime transferability.} The Mediterranean-trained model transfers favourably to humid temperate Valdivian rainforest \emph{without retraining} ($-22.2\%$ RMSE on 57{,}849 footprints, $p<0.001$). A four-site tropical montane Andean confirmatory panel from Boyac\'a (Colombia, 4$^{\circ}$N) to La Paz Yungas (Bolivia, 16$^{\circ}$S) also transfers favourably (aggregate $-14.7\%$, $n=5{,}308$). Two falsifying probes degrade as predicted: Vietnam Mekong Delta ($+5.8\%$, lacks Andean relief) and Atacama ($+54\%$ on already-accurate 0.6~m FABDEM, lacks canopy bias). The resulting 6+2 split across $\sim$53$^{\circ}$ of latitude empirically bounds the operational applicability domain to terrain that shares the two pre-conditions identified.
+
+\textbf{Photogrammetric rigor.} An ATL08 uncertainty-propagation analysis shows that the corrected DEM has approached the noise floor of the ground truth itself in 12 of the 16 evaluated tiles; further accuracy improvements in the Mediterranean training region will require airborne LiDAR ground truth rather than additional modelling sophistication.
+
+\textbf{Why ISPRS Journal of Photogrammetry and Remote Sensing.} This work advances DEM correction methodology using ICESat-2 photon-counting altimetry as scalable ground truth---core topics of ISPRS J P\&RS. The contribution is documented with full reproducibility (open code, dataset and trained model on GitHub and Zenodo; spatial-block CV; block-bootstrap CIs; variogram-justified block size; seed-jitter analysis), benchmarks against an alternative-learner panel including a SOTA tabular transformer, and an honest empirical characterisation of the operational applicability domain across eight climate regimes. I believe ISPRS readers---developing and evaluating photogrammetric and remote sensing methodologies for terrain products---are the natural audience for this work.
+
+\textbf{Originality and declarations.} The manuscript has not been published elsewhere and is not under consideration by another journal. Declarations of AI-assistance, competing interest, funding, and data and code availability are included in the manuscript before the references.
+
+\closing{Sincerely,}
+
+\end{letter}
+\end{document}
