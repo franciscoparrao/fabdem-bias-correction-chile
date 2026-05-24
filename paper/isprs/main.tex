@@ -14,6 +14,8 @@
 \usepackage{siunitx}
 \usepackage{lineno}
 \usepackage{natbib}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, shapes.geometric, fit, backgrounds}
 
 \modulolinenumbers[5]
 \linenumbers
@@ -181,7 +183,7 @@ The processing pipeline (Fig.~\ref{fig:pipeline}) is organised as a tile-paralle
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/F2_pipeline_flowchart.pdf}
+\resizebox{\textwidth}{!}{\input{figures/F2_pipeline.tex}}
 \caption{End-to-end processing pipeline. Stages (i)--(vi) execute independently per $1^{\circ}$ FABDEM tile; per-tile sample tables are concatenated for training. Each stage is checkpointed (skipped on resume if output exists) and supervised by a \texttt{psutil}-based RAM watchdog. ATL08 footprints are converted from WGS84 ellipsoidal to EGM2008 orthometric heights via PROJ network mode before the regression target is assembled.}
 \label{fig:pipeline}
 \end{figure*}

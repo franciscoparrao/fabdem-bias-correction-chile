@@ -1,0 +1,110 @@
+% F2 — End-to-end pipeline flowchart. TikZ standalone, included by main.tex.
+% Replaces the matplotlib version (not acceptable for ISPRS J P&RS top-tier).
+%
+% Required packages (already loaded by elsarticle preamble):
+%   \usepackage{tikz}
+%   \usetikzlibrary{positioning, arrows.meta, shapes.geometric, fit, backgrounds}
+\begin{tikzpicture}[
+  font=\sffamily\small,
+  node distance=4mm and 6mm,
+  every node/.style={align=center},
+  % --- node styles
+  data/.style={
+    rectangle, rounded corners=2pt,
+    fill=blue!10, draw=blue!60!black, line width=0.5pt,
+    minimum width=24mm, minimum height=9mm,
+    inner sep=2pt,
+  },
+  process/.style={
+    rectangle, rounded corners=2pt,
+    fill=orange!15, draw=orange!70!black, line width=0.5pt,
+    minimum width=28mm, minimum height=9mm,
+    inner sep=2pt,
+  },
+  feature/.style={
+    rectangle, rounded corners=2pt,
+    fill=green!12, draw=green!50!black, line width=0.5pt,
+    minimum width=26mm, minimum height=9mm,
+    inner sep=2pt,
+  },
+  model/.style={
+    rectangle, rounded corners=2pt,
+    fill=purple!15, draw=purple!70!black, line width=0.5pt,
+    minimum width=30mm, minimum height=9mm,
+    inner sep=2pt,
+  },
+  output/.style={
+    rectangle, rounded corners=2pt,
+    fill=red!10, draw=red!70!black, line width=0.5pt,
+    minimum width=26mm, minimum height=9mm,
+    inner sep=2pt,
+  },
+  group/.style={
+    rectangle, rounded corners=4pt,
+    draw=gray!50, dashed, line width=0.4pt,
+    inner sep=3mm,
+  },
+  flow/.style={-{Latex[length=2mm]}, line width=0.6pt, gray!70!black},
+  flowback/.style={flow, dashed},
+]
+
+% =============== Inputs (left column) ===============
+\node[data] (fabdem) {FABDEM v1.2\\\scriptsize via GEE};
+\node[data, below=of fabdem] (sentinel) {Sentinel-1/2\\\scriptsize Planetary Computer};
+\node[data, below=of sentinel] (atl08) {ICESat-2 ATL08\\\scriptsize earthaccess};
+\node[data, below=of atl08] (egm08) {EGM2008 geoid\\\scriptsize PROJ network};
+
+% =============== Per-tile feature derivation ===============
+\node[feature, right=14mm of fabdem] (terrain) {SurtGis terrain\\\scriptsize slope, openness, MRVBF\ldots};
+\node[feature, below=of terrain] (hydro) {SurtGis hydrology\\\scriptsize HAND, TWI, flow\ldots};
+\node[feature, below=of hydro] (s2) {Sentinel-2 indices\\\scriptsize NDVI, NDWI, NDMI\ldots};
+\node[feature, below=of s2] (s1) {Sentinel-1 SAR\\\scriptsize VV, VH, ratio};
+
+% =============== Footprint pipeline ===============
+\node[process, right=14mm of terrain] (extract) {Extract ATL08\\\scriptsize quality filter, EGM2008\\\scriptsize WGS84 \(\to\) orthometric};
+\node[process, below=18mm of extract] (sample) {Sample features\\\scriptsize at footprint coords\\\scriptsize (CRS-aware nearest)};
+\node[process, below=of sample] (target) {Build regression target\\\scriptsize \(y = h_{te,\text{ortho}} - h_{\text{fabdem}}\)};
+
+% =============== ML training ===============
+\node[model, right=14mm of sample] (train) {XGBoost + Optuna\\\scriptsize 100 trials, spatial-block CV\\\scriptsize 10 km blocks, K=5};
+
+% =============== Outputs ===============
+\node[output, right=14mm of train, yshift=10mm] (rmse) {OOF RMSE\\\scriptsize 3.054 \(\to\) 2.483 m};
+\node[output, right=14mm of train, yshift=-10mm] (cog) {Corrected DEM\\\scriptsize Cloud-Optimized GeoTIFF};
+\node[output, below=of cog] (ood) {OOD evaluation\\\scriptsize 8 climate regimes\\\scriptsize 16 tiles, 181k footprints};
+
+% =============== Arrows ===============
+\draw[flow] (fabdem) -- (terrain);
+\draw[flow] (fabdem.east) -- ++(4mm,0) |- (hydro.west);
+\draw[flow] (sentinel) -- (s2);
+\draw[flow] (sentinel.east) -- ++(4mm,0) |- (s1.west);
+\draw[flow] (atl08) -- (extract);
+\draw[flow] (egm08.east) -| (extract.south);
+
+\draw[flow] (terrain.east) -- ++(4mm,0) |- (sample.west);
+\draw[flow] (hydro.east)   -- ++(4mm,0) |- (sample.west);
+\draw[flow] (s2.east)      -- ++(4mm,0) |- (sample.west);
+\draw[flow] (s1.east)      -- ++(4mm,0) |- (sample.west);
+
+\draw[flow] (extract) -- (sample);
+\draw[flow] (sample)  -- (target);
+\draw[flow] (target.east) -- ++(4mm,0) |- (train.west);
+\draw[flow] (train.east) -- ++(4mm,0) |- (rmse.west);
+\draw[flow] (train.east) -- ++(4mm,0) |- (cog.west);
+\draw[flow] (cog)        -- (ood);
+
+% =============== Background groups ===============
+\begin{pgfonlayer}{background}
+  \node[group, fit=(fabdem) (egm08), label={[font=\sffamily\scriptsize\itshape,
+        text=gray!60!black, anchor=south]above:Data sources}] {};
+  \node[group, fit=(terrain) (s1), label={[font=\sffamily\scriptsize\itshape,
+        text=gray!60!black, anchor=south]above:Per-tile feature derivation}] {};
+  \node[group, fit=(extract) (target), label={[font=\sffamily\scriptsize\itshape,
+        text=gray!60!black, anchor=south]above:Footprint pipeline}] {};
+  \node[group, fit=(train), label={[font=\sffamily\scriptsize\itshape,
+        text=gray!60!black, anchor=south]above:Training}] {};
+  \node[group, fit=(rmse) (ood), label={[font=\sffamily\scriptsize\itshape,
+        text=gray!60!black, anchor=south]above:Outputs}] {};
+\end{pgfonlayer}
+
+\end{tikzpicture}

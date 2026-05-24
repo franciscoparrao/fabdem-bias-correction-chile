@@ -6,37 +6,22 @@ a four-regime scatter that adds the non-Chilean OOD tiles (Vietnam Mekong
 Delta, Atacama). Mediterranean tiles now use spatial-CV OOF predictions for
 honest comparison (no in-sample leakage in the visual either).
 """
+import sys
 from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-plt.rcParams.update({
-    "font.family": "DejaVu Sans",
-    "font.size": 10,
-    "axes.titlesize": 11,
-    "axes.labelsize": 10,
-    "xtick.labelsize": 9,
-    "ytick.labelsize": 9,
-    "legend.fontsize": 9,
-    "figure.dpi": 100,
-    "savefig.dpi": 300,
-    "savefig.bbox": "tight",
-    "axes.grid": True,
-    "grid.alpha": 0.3,
-})
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from style_v2 import setup_style, COLORS_REGIME
+from adjustText import adjust_text
+setup_style()
 
 ROOT = Path("/home/franciscoparrao/proyectos/super-resolution-dem")
 FIG = ROOT / "paper" / "figures"
 ISPRS_FIG = ROOT / "paper" / "isprs" / "figures"
 
-COLORS = {
-    "mediterranean":   "#D7642E",  # warm orange — training
-    "humid_temperate": "#2E8B8B",  # teal — OOD Chile (favourable)
-    "tropical_wet":    "#7BA05B",  # sage green — OOD Vietnam (boundary, marginal degrade)
-    "hyperarid":       "#C9956B",  # tan/sand — OOD Atacama (boundary, catastrophic)
-    "tropical_montane": "#7B3F7B", # purple — OOD Cusco (confirmatory favourable)
-}
+COLORS = COLORS_REGIME
 MARKERS = {
     "mediterranean":   "o",
     "humid_temperate": "s",
@@ -126,23 +111,15 @@ for regime in ["mediterranean", "humid_temperate", "tropical_wet", "hyperarid", 
     )
 
 # Per-tile labels with anti-overlap offsets
-OFFSETS = {
-    "S35W071": (10, 4),     "S35W072": (10, 4),
-    "S36W071": (10, -14),   "S36W072": (10, 4),
-    "S37W071": (-55, -14),  "S37W072": (10, 4),
-    "S38W072": (10, 4),     "S38W073": (10, 4),
-    "S39W072": (-55, 4),    "S39W073": (10, -12),
-    "N10E105": (-65, 4),    "S24W069": (10, 4),
-    "S13W072": (-65, 4),    "N04W074": (10, -14),
-    "S01W079": (-65, 4),    "S16W068": (10, 4),
-}
+# Auto-positioned labels (adjustText) avoid the cluster overlap at RMSE 2-5 m
+texts = []
 for _, r in agg.iterrows():
-    dx, dy = OFFSETS.get(r.tile, (8, 4))
-    ax.annotate(
-        r.tile, (r.rmse_raw, r.delta_pct),
-        fontsize=8, xytext=(dx, dy), textcoords="offset points",
-        bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.8),
-    )
+    texts.append(ax.text(r.rmse_raw, r.delta_pct, r.tile, fontsize=7,
+                         bbox=dict(boxstyle="round,pad=0.15", fc="white",
+                                   ec="none", alpha=0.85)))
+adjust_text(texts, ax=ax, only_move={"text": "xy"}, force_text=(0.6, 0.8),
+            expand_text=(1.1, 1.3), expand_points=(1.4, 1.4),
+            arrowprops=dict(arrowstyle="-", color="gray", lw=0.4, alpha=0.6))
 
 ax.axhline(0, color="black", linewidth=0.6, linestyle="--", alpha=0.7)
 
@@ -151,11 +128,9 @@ ax.axhspan(-65, 0, color="#E4F4E4", alpha=0.4, zorder=-1)   # improvement
 ax.axhspan(0, 60, color="#FFE4E4", alpha=0.5, zorder=-1)    # degradation
 
 ax.set_xlabel("FABDEM raw RMSE (m)")
-ax.set_ylabel(r"$\Delta$RMSE $= (\mathrm{RMSE}_{\mathrm{corr}} - \mathrm{RMSE}_{\mathrm{raw}}) / \mathrm{RMSE}_{\mathrm{raw}} \times 100$ (\%)" "\n← improvement        degradation →")
-ax.set_title("Per-tile correction performance across five climate regimes\n"
-             "(tropical montane Andes panel = 4 tiles spanning Colombia 4°N to Bolivia 16°S;\n"
-             "marker area ∝ √n footprints; single M-M model, no retraining)")
-ax.legend(loc="upper right", framealpha=0.95)
+ax.set_ylabel(r"$\Delta$RMSE (%)  $\leftarrow$ improvement   degradation $\rightarrow$")
+# Title removed — caption is in LaTeX
+ax.legend(loc="upper right", fontsize=7)
 ax.set_xlim(0.3, 13)
 ax.set_ylim(-65, 60)
 
