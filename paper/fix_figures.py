@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Fix F3, F5, F8 — apply issues found in H5 review."""
 import json
+import sys
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -8,13 +9,9 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from matplotlib.gridspec import GridSpec
 
-plt.rcParams.update({
-    "font.family": "DejaVu Sans", "font.size": 10,
-    "axes.titlesize": 11, "axes.labelsize": 10,
-    "xtick.labelsize": 9, "ytick.labelsize": 9, "legend.fontsize": 9,
-    "figure.dpi": 100, "savefig.dpi": 300, "savefig.bbox": "tight",
-    "axes.grid": True, "grid.alpha": 0.3,
-})
+sys.path.insert(0, str(Path(__file__).resolve().parent / "figures"))
+from style_v2 import setup_style, COLORS_REGIME, COLOR_RAW
+setup_style()
 
 ROOT = Path("/home/franciscoparrao/proyectos/super-resolution-dem")
 P1 = ROOT / "scale_p1"
@@ -22,7 +19,8 @@ P3A = ROOT / "scale_p3a"
 INFER = P1 / "inference"
 FIG = ROOT / "paper" / "figures"
 
-COLOR_MD, COLOR_HT, COLOR_RAW = "#D7642E", "#2E8B8B", "#888888"
+COLOR_MD = COLORS_REGIME["mediterranean"]
+COLOR_HT = COLORS_REGIME["humid_temperate"]
 CITIES = [
     ("Curicó",     -71.24, -34.98),
     ("Talca",      -71.66, -35.43),
@@ -71,7 +69,7 @@ def fix_f3():
     ax.set_xticks(x)
     ax.set_xticklabels(agg.tile, rotation=30, ha="right")
     ax.set_ylabel("RMSE (m)")
-    ax.set_title("Per-tile RMSE: FABDEM raw vs ML-corrected — 10 tiles, 2 climate regimes")
+    # Title removed — caption in LaTeX
     ax.legend(loc="upper right")
     ax.set_ylim(-0.8, agg.rmse_raw.max() * 1.22)
 
@@ -140,7 +138,7 @@ def fix_f5():
 
     ax.set_xlabel("FABDEM raw RMSE (m)")
     ax.set_ylabel("RMSE improvement from ML correction (%)")
-    ax.set_title("Per-tile improvement vs baseline RMSE\n(marker area ∝ √n footprints)")
+    # Title removed — caption in LaTeX
     ax.legend(loc="lower right")
     ax.axhline(0, color="black", linewidth=0.5)
     ax.set_xlim(1.8, 7.6)
@@ -209,9 +207,10 @@ def fix_f8():
 
     ax_main.set_xlabel("Longitude (°)")
     ax_main.set_ylabel("Latitude (°)")
-    ax_main.set_title("Spatial pattern of predicted residual (correction layer)\n"
-                       "mm_residual.tif: ML-predicted FABDEM bias [m] over Mataquito + Maule",
-                       fontsize=10, fontweight="bold")
+    # Panel label (a) bold top-left; title removed (caption in LaTeX)
+    ax_main.text(0.02, 0.98, "(a)", transform=ax_main.transAxes,
+                 fontweight="bold", fontsize=10, va="top",
+                 bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.85))
     ax_main.set_xlim(bounds.left, bounds.right)
     ax_main.set_ylim(bounds.bottom, bounds.top)
 
@@ -235,8 +234,10 @@ def fix_f8():
                       bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="black", alpha=0.95))
     ax_inset.set_xlabel("Longitude (°)")
     ax_inset.set_ylabel("Latitude (°)")
-    ax_inset.set_title("Inset: Licantén area (Mataquito mouth, jun 2023 flood reference site)",
-                        fontsize=9, fontweight="bold")
+    # Panel label (b); description goes to caption
+    ax_inset.text(0.02, 0.98, "(b)", transform=ax_inset.transAxes,
+                  fontweight="bold", fontsize=10, va="top",
+                  bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="none", alpha=0.85))
     cbar2 = fig.colorbar(im2, ax=ax_inset, orientation="vertical", fraction=0.04, pad=0.02)
     cbar2.set_label("residual (m)", fontsize=8)
 

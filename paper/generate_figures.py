@@ -5,6 +5,7 @@ Produces PDF + PNG for each figure at publication-grade quality.
 Single command: run this script to (re-)generate all figures.
 """
 import json
+import sys
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -12,21 +13,11 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.gridspec import GridSpec
 
-# Publication style
-plt.rcParams.update({
-    "font.family": "DejaVu Sans",
-    "font.size": 10,
-    "axes.titlesize": 11,
-    "axes.labelsize": 10,
-    "xtick.labelsize": 9,
-    "ytick.labelsize": 9,
-    "legend.fontsize": 9,
-    "figure.dpi": 100,
-    "savefig.dpi": 300,
-    "savefig.bbox": "tight",
-    "axes.grid": True,
-    "grid.alpha": 0.3,
-})
+# Publication style — load shared rcParams from style_v2 (Helvetica/Arial,
+# spines bottom+left only, ticks `in`, frameon=False, pdf.fonttype=42, etc.)
+sys.path.insert(0, str(Path(__file__).resolve().parent / "figures"))
+from style_v2 import setup_style, COLORS_REGIME, COLOR_RAW, COLOR_CORR
+setup_style()
 
 ROOT = Path("/home/franciscoparrao/proyectos/super-resolution-dem")
 P1 = ROOT / "scale_p1"
@@ -35,10 +26,8 @@ P2V = ROOT / "p2_validation"
 FIG = ROOT / "paper" / "figures"
 FIG.mkdir(parents=True, exist_ok=True)
 
-COLOR_MD = "#D7642E"   # Mediterranean: warm orange
-COLOR_HT = "#2E8B8B"   # Humid temperate: teal
-COLOR_RAW = "#888888"  # baseline: gray
-COLOR_CORR = "#1F77B4" # corrected: blue
+COLOR_MD = COLORS_REGIME["mediterranean"]
+COLOR_HT = COLORS_REGIME["humid_temperate"]
 
 
 def savefig(fig, name):
@@ -82,7 +71,7 @@ def fig_per_tile():
     ax.set_xticks(x)
     ax.set_xticklabels(agg.tile, rotation=30, ha="right")
     ax.set_ylabel("RMSE (m)")
-    ax.set_title("Per-tile RMSE: FABDEM raw vs ML-corrected — 10 tiles, 2 climate regimes")
+    # Title removed — caption in LaTeX
     ax.legend(loc="upper left")
     ax.set_ylim(0, agg.rmse_raw.max() * 1.2)
     # Regime annotation
@@ -134,9 +123,11 @@ def fig_stratification():
         ax.set_xticks(x)
         ax.set_xticklabels(df.index, rotation=30, ha="right", fontsize=8)
         ax.set_ylabel("RMSE improvement (%)")
-        ax.set_title(title)
+        # Panel label (top-left bold sans-serif, distinct from caption)
+        ax.text(0.02, 0.96, title, transform=ax.transAxes,
+                fontweight="bold", fontsize=9, va="top")
         if title.startswith("NDVI"):
-            ax.legend(loc="upper left")
+            ax.legend(loc="upper left", fontsize=7)
         # Annotate sample sizes
         for i, (idx, row) in enumerate(df.iterrows()):
             try:
@@ -144,8 +135,7 @@ def fig_stratification():
             except KeyError:
                 n_text = ""
             ax.text(i, ax.get_ylim()[0] + 1, n_text, ha="center", fontsize=6, color="gray")
-    fig.suptitle("RMSE improvement by stratum, in-sample (Mediterranean) vs out-of-distribution (Humid temperate)",
-                  fontsize=11, fontweight="bold", y=1.00)
+    # Suptitle removed — caption in LaTeX
     fig.tight_layout()
     savefig(fig, "F4_stratification_4panel")
 
@@ -202,9 +192,9 @@ def fig_shap_comparison():
     ax.barh(y + w/2, df.shap_humid_temperate, w, label="Humid temperate (OOD)", color=COLOR_HT, edgecolor="black", linewidth=0.4)
     ax.set_yticks(y)
     ax.set_yticklabels(df.feature)
-    ax.set_xlabel("Mean |SHAP value|")
-    ax.set_title("Feature importance shift: same model, two climate regimes\n(top 15 by humid temperate importance)")
-    ax.legend(loc="lower right")
+    ax.set_xlabel(r"Mean $|\mathrm{SHAP}|$ value (m)")
+    # Title removed — caption in LaTeX
+    ax.legend(loc="lower right", fontsize=8)
     # Annotate rank changes
     for i, (_, r) in enumerate(df.iterrows()):
         shift = int(r.rank_shift)
@@ -244,13 +234,15 @@ def fig_bias_histogram():
         ax.axvline(0, color="black", linewidth=0.6)
         ax.axvline(m_raw, color="dimgray", linewidth=1, linestyle="--", alpha=0.7)
         ax.axvline(m_corr, color=color, linewidth=1, linestyle="--", alpha=0.9)
-        title = ("Mediterranean" if regime == "mediterranean" else "Humid temperate (OOD)") + f" (n={n:,})"
-        ax.set_title(title)
-        ax.set_xlabel("FABDEM error (FABDEM − ICESat-2 orthometric) [m]")
-        ax.legend(loc="upper right", fontsize=8)
+        panel_label = ("(a) Mediterranean" if regime == "mediterranean"
+                       else "(b) Humid temperate (OOD)") + f" — n={n:,}"
+        ax.text(0.02, 0.96, panel_label, transform=ax.transAxes,
+                fontweight="bold", fontsize=9, va="top")
+        ax.set_xlabel("FABDEM error (FABDEM − ICESat-2 orthometric) (m)")
+        ax.legend(loc="upper right", fontsize=7)
         ax.set_xlim(-12, 12)
     axes[0].set_ylabel("Density")
-    fig.suptitle("Error distribution before and after ML correction, by regime", fontweight="bold")
+    # Suptitle removed — caption in LaTeX
     fig.tight_layout()
     savefig(fig, "F7_bias_histogram")
 

@@ -185,6 +185,14 @@ def empirical_variogram(df, n_pairs=500000, n_bins=30, max_dist_m=50000, seed=42
 
 
 def plot_variogram(variogram, out_path):
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, str(_Path(__file__).resolve().parent.parent / "figures"))
+    try:
+        from style_v2 import setup_style
+        setup_style()
+    except ImportError:
+        pass
     centres = np.array(variogram["bin_centres_m"]) / 1000  # to km
     semivar = np.array(variogram["semivariance"])
     n_bin = np.array(variogram["n_per_bin"])
@@ -196,13 +204,10 @@ def plot_variogram(variogram, out_path):
                label="10 km block size (primary)")
     ax.axvline(5, color="gray", linestyle=":", alpha=0.5, label="5 km")
     ax.axvline(20, color="gray", linestyle=":", alpha=0.5, label="20 km")
-    ax.set_xlabel("Lag distance $h$ (km)")
-    ax.set_ylabel("Semivariance $\\gamma(h)$ of OOF residuals (m$^2$)")
-    ax.set_title("Empirical variogram on Mediterranean OOF residuals\n"
-                 f"({variogram['n_pairs_used']:,} sampled pairs, "
-                 f"lag 0–{variogram['max_dist_m']/1000:.0f} km)")
-    ax.legend(loc="lower right", framealpha=0.95)
-    ax.grid(True, alpha=0.3)
+    ax.set_xlabel(r"Lag distance $h$ (km)")
+    ax.set_ylabel(r"Semivariance $\gamma(h)$ of OOF residuals (m$^2$)")
+    # Title removed — caption in LaTeX
+    ax.legend(loc="lower right", fontsize=8)
     ax.set_xlim(0, max(centres) * 1.02)
     fig.tight_layout()
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Generate F1, F2, F8 — completing the 8 flagship figures."""
 import json
+import sys
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -9,18 +10,9 @@ import matplotlib.patches as mpatches
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Rectangle
 from matplotlib.gridspec import GridSpec
 
-plt.rcParams.update({
-    "font.family": "DejaVu Sans",
-    "font.size": 10,
-    "axes.titlesize": 11,
-    "axes.labelsize": 10,
-    "xtick.labelsize": 9,
-    "ytick.labelsize": 9,
-    "legend.fontsize": 9,
-    "figure.dpi": 100,
-    "savefig.dpi": 300,
-    "savefig.bbox": "tight",
-})
+sys.path.insert(0, str(Path(__file__).resolve().parent / "figures"))
+from style_v2 import setup_style, COLORS_REGIME, COLOR_RAW, COLOR_CORR
+setup_style()
 
 ROOT = Path("/home/franciscoparrao/proyectos/super-resolution-dem")
 P1 = ROOT / "scale_p1"
@@ -29,10 +21,8 @@ INFER = P1 / "inference"
 FIG = ROOT / "paper" / "figures"
 FIG.mkdir(parents=True, exist_ok=True)
 
-COLOR_MD = "#D7642E"
-COLOR_HT = "#2E8B8B"
-COLOR_RAW = "#888888"
-COLOR_CORR = "#1F77B4"
+COLOR_MD = COLORS_REGIME["mediterranean"]
+COLOR_HT = COLORS_REGIME["humid_temperate"]
 
 # Tile inventory (name, bbox W,S,E,N, regime)
 TILES = [
@@ -135,8 +125,7 @@ def fig_study_area():
     # Grid and labels
     ax.set_xlabel("Longitude (°)")
     ax.set_ylabel("Latitude (°)")
-    ax.set_title("Study area: 10 FABDEM tiles, 2 climate regimes (central-south Chile)",
-                  fontsize=11, fontweight="bold")
+    # Title removed — caption in LaTeX
     ax.grid(True, alpha=0.3, linestyle=":")
 
     # North arrow + scale (rough)
@@ -163,7 +152,9 @@ def fig_study_area():
     ax_inset.set_ylim(-56, 14)
     ax_inset.set_aspect("equal")
     ax_inset.set_xticks([]); ax_inset.set_yticks([])
-    ax_inset.set_title("South America", fontsize=9)
+    # Inset label as inline text (not set_title)
+    ax_inset.text(0.5, 1.02, "South America", transform=ax_inset.transAxes,
+                  ha="center", va="bottom", fontsize=8, fontweight="bold")
 
     savefig(fig, "F1_study_area")
 
@@ -342,8 +333,8 @@ def fig_residual_map():
 
 
 if __name__ == "__main__":
-    print(f"Generating F1, F2, F8 into {FIG}")
-    fig_pipeline_flowchart()  # cheapest, do first
+    print(f"Generating F1, F8 into {FIG}  (F2 superseded by TikZ standalone)")
+    # fig_pipeline_flowchart()  # F2 replaced by isprs/figures/F2_pipeline.tex (TikZ)
     fig_study_area()
     fig_residual_map()
     print(f"\n✅ Done. Total figures in {FIG}:")
