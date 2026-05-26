@@ -435,12 +435,13 @@ All artefacts described in this paper are released as open products to support r
 
 \textbf{Primary outputs (Zenodo, persistent DOI)}:
 \begin{itemize}
-\item \emph{Corrected DEM COG} covering Mataquito $+$ Maule (six tiles, $\sim$80\,M pixels, \SI{282}{\mega\byte}), released under \textbf{CC BY-NC-4.0} (inherited from FABDEM \citealt{Hawker2022FABDEM}): [Zenodo DOI to be assigned at submission].
-\item \emph{Training dataset}---135{,}350 footprints with 33 features, EGM2008-corrected ICESat-2 ground truth, and per-tile metadata in a single Parquet file ($\sim$\SI{62}{\mega\byte}): [Zenodo DOI].
-\item \emph{Trained XGBoost model} in both portable booster JSON and scikit-learn joblib formats, with bundled hyperparameter manifest: [Zenodo DOI].
+\item \emph{Corrected DEM COG} covering Mataquito $+$ Maule (six tiles, $\sim$80\,M pixels, \SI{282}{\mega\byte}), released under \textbf{CC BY-NC-4.0} (inherited from FABDEM \citealt{Hawker2022FABDEM}): \url{https://doi.org/10.5281/zenodo.20386546}.
+\item \emph{Training dataset (Mediterranean)}---77{,}501 ICESat-2 ATL08 v7 ground-classified footprints with the 33-feature stack and EGM2008-corrected ground truth, in a single Parquet file ($\sim$\SI{21}{\mega\byte}): \url{https://doi.org/10.5281/zenodo.20386571}.
+\item \emph{Out-of-distribution evaluation samples}---104{,}407 footprints across five climate regimes (humid temperate Chile, hyperarid Atacama, tropical wet Vietnam, tropical montane Colombia/Ecuador/Bolivia, tropical montane Cusco) used in the transferability analysis of Section~\ref{sec:ood_results}, single Parquet file ($\sim$\SI{27}{\mega\byte}): \url{https://doi.org/10.5281/zenodo.20388649}.
+\item \emph{Trained XGBoost model} in both portable booster JSON and scikit-learn joblib formats, with bundled hyperparameter manifest: \url{https://doi.org/10.5281/zenodo.20386582}.
 \end{itemize}
 
-\textbf{Code}: The complete pipeline (tile orchestrator with checkpointing and watchdog, feature engineering, training, SHAP analysis, raster inference, statistical testing) is released on GitHub at [URL to be assigned]. A tagged release matching the manuscript revision is preserved on Zenodo with a software DOI. A Dockerfile and \texttt{environment.yml} capture the exact dependency tree.
+\textbf{Code}: The complete pipeline (tile orchestrator with checkpointing and watchdog, feature engineering, training, SHAP analysis, raster inference, statistical testing) is released on GitHub at \url{https://github.com/franciscoparrao/fabdem-bias-correction-chile}. A tagged release matching the manuscript revision is preserved on Zenodo with a software DOI. A Dockerfile and \texttt{environment.yml} capture the exact dependency tree.
 
 \textbf{Software versions}: Python 3.12, XGBoost 3.1.1, Optuna 4.6.0, scikit-learn 1.8.0, SHAP 0.50.0, rasterio 1.4.x, pyproj 3.6.x (PROJ network mode for EGM2008 grid), \texttt{earthaccess} 0.18.0, \texttt{pystac-client} and \texttt{stackstac} for Planetary Computer access, SurtGis 0.7.0 \citep{SurtGis2026}.
 
